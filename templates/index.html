@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Loja de Eletrônicos</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <header>
+        <nav>
+            <div class="logo">Eletrônicos</div>
+            <ul>
+                <li><a href="/">Home</a></li>
+                {% if session.get('usuario_administrador') %}
+                    <li><a href="{{ url_for('cadastro_produto') }}">Cadastrar Produto</a></li>
+                {% endif %}
+                <li><a href="/categoria">Categorias</a></li>
+                <li><a href="/carrinho">Carrinho</a></li>
+                <li><a href="/usuario">Usuário</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section class="hero">
+            <h1>Bem-vindo à Loja de Eletrônicos</h1>
+            <p>Encontre os melhores produtos eletrônicos aqui.</p>
+        </section>
+
+        <section class="produtos-destaque">
+            <h2>Destaques</h2>
+            <div class="produtos-lista">
+                <!-- Loop para exibir produtos dinamicamente -->
+                {% for produto in produtos %}
+                <div class="produto">
+                    <h3>{{ produto.nome }}</h3>
+                    <p>{{ produto.descricao }}</p>
+                    <p>R$ {{ produto.preco }}</p>
+                    <form action="{{ url_for('adicionar_carrinho', id_produto=produto.idProduto) }}" method="post">
+                        <label for="quantidade">Quantidade:</label>
+                        <input type="number" id="quantidade" name="quantidade" min="1" required>
+                        <button type="submit">Adicionar ao Carrinho</button>
+                    </form>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2024 Loja de Eletrônicos. Todos os direitos reservados.</p>
+    </footer>
+</body>
+</html>

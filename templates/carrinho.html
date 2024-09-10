@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Carrinho</title>
+</head>
+<body>
+    <h1>Carrinho</h1>
+    <ul>
+        {% for item in carrinho %}
+            <li>Produto ID: {{ item[1] }} - Quantidade: {{ item[2] }}</li>
+        {% endfor %}
+    </ul>
+    <a href="{{ url_for('index') }}">Voltar</a>
+</body>
+</html>
