@@ -1,5 +1,6 @@
+# usuario.py
 class Usuario:
-    def __init__(self, nome, cpf, email, senha, endereco, telefone, administrador=False):
+    def __init__(self, nome, cpf, email, senha, endereco, telefone, administrador):
         self.nome = nome
         self.cpf = cpf
         self.email = email

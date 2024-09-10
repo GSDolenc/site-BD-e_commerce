@@ -1,15 +1,60 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-br">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Carrinho</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
-    <h1>Carrinho</h1>
-    <ul>
-        {% for item in carrinho %}
-            <li>Produto ID: {{ item[1] }} - Quantidade: {{ item[2] }}</li>
-        {% endfor %}
-    </ul>
-    <a href="{{ url_for('index') }}">Voltar</a>
+    <header>
+        <nav>
+            <div class="logo">Eletrônicos</div>
+            <ul>
+                <li><a href="{{ url_for('index') }}">Home</a></li>
+                {% if session.get('id_usuario') %}
+                    <li><a href="{{ url_for('carrinho') }}">Carrinho</a></li>
+                    <li><a href="{{ url_for('logout') }}">Logout</a></li>
+                {% else %}
+                    <li><a href="{{ url_for('login_usuario') }}">Login</a></li>
+                {% endif %}
+                <li><a href="{{ url_for('usuario') }}">Usuário</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <h1>Carrinho de Compras</h1>
+        {% if carrinho_items %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Produto</th>
+                        <th>Quantidade</th>
+                        <th>Preço</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in carrinho_items %}
+                        <tr>
+                            <td>{{ item['Nome'] }}</td>
+                            <td>{{ item['Quantidade'] }}</td>
+                            <td>R$ {{ "%.2f"|format(item['Preço']) }}</td> <!-- Corrigido para usar as chaves dos dicionários -->
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <a href="{{ url_for('finalizar_compra') }}" class="btn">Finalizar Compra</a>
+            <form action="{{ url_for('limpar_carrinho') }}" method="post">
+                <button type="submit" class="btn">Limpar Carrinho</button>
+            </form>
+        {% else %}
+            <p>Seu carrinho está vazio.</p>
+        {% endif %}
+    </main>
+
+    <footer>
+        <p>&copy; 2024 Loja de Eletrônicos. Todos os direitos reservados.</p>
+    </footer>
 </body>
 </html>

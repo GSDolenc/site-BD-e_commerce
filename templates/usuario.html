@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Usuário</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <header>
+        <nav>
+            <div class="logo">Eletrônicos</div>
+            <ul>
+                <li><a href="{{ url_for('index') }}">Home</a></li>
+                {% if session.get('id_usuario') %}
+                    <li><a href="{{ url_for('carrinho') }}">Carrinho</a></li>
+                    <li><a href="{{ url_for('logout') }}">Logout</a></li>
+                {% else %}
+                    <li><a href="{{ url_for('login_usuario') }}">Login</a></li>
+                {% endif %}
+                <li><a href="{{ url_for('usuario') }}">Usuário</a></li>
+            </ul>
+        </nav>
+    </header>
+
+   <main>
+    <h1>Informações do Usuário</h1>
+    {% if usuario %}
+        <p><strong>Nome:</strong> {{ usuario.Nome }}</p>
+        <p><strong>CPF:</strong> {{ usuario.CPF }}</p>
+        <p><strong>Email:</strong> {{ usuario.Email }}</p>
+        <p><strong>Endereço:</strong> {{ usuario.Endereço }}</p>
+        <p><strong>Telefone:</strong> {{ usuario.Telefone }}</p>
+        <p><strong>Administrador:</strong> {{ usuario.Administrador }}</p>
+    {% else %}
+        <p>Usuário não encontrado.</p>
+    {% endif %}
+</main>
+
+
+    <footer>
+        <p>&copy; 2024 Loja de Eletrônicos. Todos os direitos reservados.</p>
+    </footer>
+</body>
+</html>

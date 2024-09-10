@@ -1,7 +1,7 @@
 import mysql.connector
 from mysql.connector import Error
 from categoria import Categoria
-from produto import Produtos
+from produto import Produto
 from carrinho import Carrinho
 from usuario import Usuario
 from pedido import Pedido
@@ -33,10 +33,8 @@ class Database:
             cursor = self.conexao.cursor()
             cursor.execute("SELECT * FROM Categoria;")
             registros = cursor.fetchall()
-            print("Total de registros encontrados:", cursor.rowcount)
-            for Linha in registros:
-                print("Id:", Linha[0], "Nome:", Linha[1], 'Descrição:', Linha[2])
             return registros
+        return []
 
     def inserirCategoria(self, categoria):
         if self.conexao.is_connected():
@@ -44,16 +42,15 @@ class Database:
             sql_insert = "INSERT INTO Categoria (nome, descricao) VALUES (%s, %s)"
             valores = (categoria.nome, categoria.descricao)
             cursor.execute(sql_insert, valores)
-            self.conexao.commit()  # Garantir que os dados são salvos
-            print("Categoria inserida com sucesso")
+            self.conexao.commit()
 
     def ListaProdutos(self):
         if self.conexao.is_connected():
-            cursor = self.conexao.cursor()
-            cursor.execute("SELECT Nome, Descrição, Preço, Quantidadeemestoque FROM Produto;")
+            cursor = self.conexao.cursor(dictionary=True)  # Retorna dicionários ao invés de tuplas
+            cursor.execute("SELECT * FROM Produto;")
             registros = cursor.fetchall()
-            print("Total de registros encontrados:", cursor.rowcount)
             return registros
+        return []
 
     def inserirProdutos(self, produto):
         if self.conexao.is_connected():
@@ -64,32 +61,47 @@ class Database:
             """
             valores = (produto.nome, produto.descricao, produto.preco, produto.quantidade, produto.categoria_id)
             cursor.execute(sql_insert, valores)
-            self.conexao.commit()  # Garantir que os dados são salvos
+            self.conexao.commit()
 
-    def ListaCarrinho(self):
+    def ListaCarrinho(self, id_usuario):
+        if self.conexao.is_connected():
+            cursor = self.conexao.cursor(dictionary=True)  # Retorna dicionários ao invés de tuplas
+            sql_query = """
+                SELECT p.Nome, c.Quantidade, p.Preço
+                FROM Carrinho c
+                JOIN Produto p ON c.IDProduto = p.idProduto
+                WHERE c.IDUsuário = %s
+            """
+            cursor.execute(sql_query, (id_usuario,))
+            registros = cursor.fetchall()
+            return registros
+
+    def limparCarrinho(self, id_usuario):
         if self.conexao.is_connected():
             cursor = self.conexao.cursor()
-            cursor.execute("SELECT * FROM Carrinho;")
-            registros = cursor.fetchall()
-            print("Total de registros encontrados:", cursor.rowcount)
-            return registros
+            sql_delete = "DELETE FROM Carrinho WHERE IDUsuário = %s"
+            cursor.execute(sql_delete, (id_usuario,))
+            self.conexao.commit()
 
     def inserirCarrinho(self, id_produto, quantidade, id_usuario):
         if self.conexao.is_connected():
             cursor = self.conexao.cursor()
-            sql_insert = "INSERT INTO Carrinho (idproduto, quantidade, IDUsuario) VALUES (%s, %s, %s)"
+            sql_insert = """
+                INSERT INTO Carrinho (IDProduto, Quantidade, IDUsuário)
+                VALUES (%s, %s, %s)
+                ON DUPLICATE KEY UPDATE Quantidade = Quantidade + VALUES(Quantidade)
+            """
             valores = (id_produto, quantidade, id_usuario)
             cursor.execute(sql_insert, valores)
             self.conexao.commit()
-            print("Produto adicionado ao carrinho com sucesso")
 
     def ListaUsuario(self):
         if self.conexao.is_connected():
             cursor = self.conexao.cursor()
             cursor.execute("SELECT * FROM Usuario;")
             registros = cursor.fetchall()
-            print("Total de registros encontrados:", cursor.rowcount)
             return registros
+        return []
 
     def inserirUsuario(self, usuario):
         if self.conexao.is_connected():
@@ -98,27 +110,39 @@ class Database:
                 INSERT INTO Usuario (Nome, CPF, Email, Senha, Endereço, Telefone, Administrador)
                 VALUES (%s, %s, %s, %s, %s, %s, %s)
             """
-            valores = (usuario.nome, usuario.CPF, usuario.email, usuario.senha, usuario.endereco, usuario.telefone, usuario.administrador)
+            valores = (usuario.nome, usuario.CPF, usuario.email, usuario.senha, usuario.endereco, usuario.telefone,
+                       usuario.administrador)
             cursor.execute(sql_insert, valores)
-            self.conexao.commit()  # Garantir que os dados são salvos
-            print("Usuário inserido com sucesso")
+            self.conexao.commit()
+
+    def buscarUsuarioPorId(self, id_usuario):
+        if self.conexao.is_connected():
+            cursor = self.conexao.cursor(dictionary=True)
+            sql_select = """
+                SELECT * FROM Usuario
+                WHERE IDUsuário = %s
+            """
+            cursor.execute(sql_select, (id_usuario,))
+            usuario = cursor.fetchone()
+            return usuario
+        return None
 
     def ListaPedido(self):
         if self.conexao.is_connected():
             cursor = self.conexao.cursor()
             cursor.execute("SELECT * FROM Pedido;")
             registros = cursor.fetchall()
-            print("Total de registros encontrados:", cursor.rowcount)
             return registros
+        return []
 
     def inserirPedido(self, pedido):
         if self.conexao.is_connected():
             cursor = self.conexao.cursor()
             sql_insert = """
-                INSERT INTO Pedido (datapedido, IDUsuario, status)
+                INSERT INTO Pedido (DataPedido, IDUsuário, Status)
                 VALUES (%s, %s, %s)
             """
-            valores = (pedido.datapedido, pedido.IDUsuario, pedido.status)
+            valores = (pedido.data_pedido, pedido.id_usuario, pedido.status)
             cursor.execute(sql_insert, valores)
             self.conexao.commit()
 
@@ -127,17 +151,17 @@ class Database:
             cursor = self.conexao.cursor()
             cursor.execute("SELECT * FROM Endereco;")
             registros = cursor.fetchall()
-            print("Total de registros encontrados:", cursor.rowcount)
             return registros
+        return []
 
     def inserirEndereco(self, endereco):
         if self.conexao.is_connected():
             cursor = self.conexao.cursor()
             sql_insert = """
-                INSERT INTO Endereco (rua, numero, cidade, estado, CEP, pais, IDUsuario)
+                INSERT INTO Endereco (Rua, Numero, Cidade, Estado, CEP, Pais, IDUsuário)
                 VALUES (%s, %s, %s, %s, %s, %s, %s)
             """
-            valores = (endereco.rua, endereco.numero, endereco.cidade, endereco.estado, endereco.CEP, endereco.pais, endereco.IDUsuario)
+            valores = (endereco.rua, endereco.numero, endereco.cidade, endereco.estado, endereco.CEP, endereco.pais, endereco.IDUsuário)
             cursor.execute(sql_insert, valores)
             self.conexao.commit()
 
@@ -145,12 +169,13 @@ class Database:
         if self.conexao.is_connected():
             cursor = self.conexao.cursor(dictionary=True)
             sql_select = """
-                SELECT * FROM Usuario 
+                SELECT * FROM Usuario
                 WHERE Email = %s AND Senha = %s
             """
             cursor.execute(sql_select, (email, senha))
             usuario = cursor.fetchone()
             return usuario
+        return None
 
     def fecha(self):
         if self.conexao.is_connected():

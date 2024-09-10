@@ -1,158 +1,130 @@
-from flask import Flask, render_template, request, redirect, url_for, session, flash
+from flask import Flask, render_template, request, redirect, url_for, session
 from BD import Database
 from usuario import Usuario
-from produto import Produtos
-from categoria import Categoria
+from pedido import Pedido
 
 app = Flask(__name__)
-app.secret_key = 'sua_chave_secreta'  # Necessário para usar sessões
+app.secret_key = 'sua_chave_secreta'
 
-# Instancia o banco de dados
 db = Database()
 
-# Página inicial com produtos
 @app.route('/')
 def index():
     produtos = db.ListaProdutos()
     return render_template('index.html', produtos=produtos)
 
-# Página de detalhes do usuário
+@app.route('/adicionar_carrinho/<int:id_produto>', methods=['POST'])
+def adicionar_carrinho(id_produto):
+    quantidade = request.form.get('quantidade')
+    id_usuario = session.get('id_usuario')
+
+    if id_usuario:
+        db.inserirCarrinho(id_produto, quantidade, id_usuario)
+        return redirect(url_for('carrinho'))
+    else:
+        return redirect(url_for('login_usuario'))
+
+@app.route('/carrinho')
+def carrinho():
+    if 'id_usuario' not in session:
+        return redirect(url_for('login_usuario'))
+    id_usuario = session.get('id_usuario')
+    carrinho_items = db.ListaCarrinho(id_usuario)
+    return render_template('carrinho.html', carrinho_items=carrinho_items)
+
+
+@app.route('/limpar_carrinho', methods=['POST'])
+def limpar_carrinho():
+    if 'id_usuario' not in session:
+        return redirect(url_for('login_usuario'))
+
+    id_usuario = session['id_usuario']
+    db.limparCarrinho(id_usuario)
+
+    return redirect(url_for('carrinho'))
+
+
+@app.route('/finalizar_compra', methods=['GET', 'POST'])
+def finalizar_compra():
+    if 'id_usuario' not in session:
+        return redirect(url_for('login_usuario'))
+
+    if request.method == 'POST':
+        carrinho_items = db.ListaCarrinho(session['id_usuario'])
+        if carrinho_items:
+            for item in carrinho_items:
+                pedido = Pedido(
+                    data_pedido=datetime.now(),  # Adicionando data do pedido
+                    id_usuario=session['id_usuario'],
+                    status='Pendente'  # Definindo um status padrão
+                )
+                db.inserirPedido(pedido)
+
+            db.limparCarrinho(session['id_usuario'])
+        return redirect(url_for('index'))
+
+    return render_template('finalizar_compra.html')
+
 @app.route('/usuario')
 def usuario():
-    if 'usuario_id' in session:
-        return f"Bem-vindo, {session['usuario_nome']}!"
-    else:
-        return redirect(url_for('login'))
+    if 'id_usuario' not in session:
+        return redirect(url_for('login_usuario'))
 
-# Página de login
-@app.route('/usuario/login', methods=['GET', 'POST'])
-def login():
+    usuario = db.buscarUsuarioPorId(session['id_usuario'])
+    return render_template('usuario.html', usuario=usuario)
+
+@app.route('/login', methods=['GET', 'POST'])
+def login_usuario():
     if request.method == 'POST':
-        email = request.form['email']
-        senha = request.form['senha']
+        email = request.form.get('email')
+        senha = request.form.get('senha')
 
-        # Verifica se o usuário existe no banco de dados
         usuario = db.buscarUsuario(email, senha)
+
         if usuario:
-            session['usuario_id'] = usuario['IDUsuário']
+            session['id_usuario'] = usuario['IDUsuário']
             session['usuario_nome'] = usuario['Nome']
-            session['usuario_administrador'] = usuario['Administrador']
-            flash('Login realizado com sucesso!', 'success')
+            session['usuario_administrador'] = usuario.get('Administrador', False)
             return redirect(url_for('index'))
         else:
-            flash('Email ou senha inválidos.', 'danger')
+            return "Email ou senha incorretos", 400
 
     return render_template('login.html')
 
-# Página de cadastro de novo usuário
-@app.route('/usuario/cadastro', methods=['GET', 'POST'])
-def cadastro():
-    if request.method == 'POST':
-        nome = request.form['nome']
-        cpf = request.form['CPF']
-        email = request.form['email']
-        senha = request.form['senha']
-        endereco = request.form['endereco']
-        telefone = request.form['telefone']
-        administrador = 'administrador' in request.form  # Verifica se o checkbox 'administrador' foi marcado
-
-        # Cria um objeto Usuario
-        usuario = Usuario(nome, cpf, email, senha, endereco, telefone, administrador)
-
-        # Insere o usuário no banco de dados
-        db.inserirUsuario(usuario)
-
-        flash('Usuário cadastrado com sucesso!', 'success')
-        return redirect(url_for('login'))
-
-    return render_template('cadastro.html')
-
-# Logout do usuário
-@app.route('/usuario/logout')
+@app.route('/logout')
 def logout():
-    session.pop('usuario_id', None)
+    session.pop('id_usuario', None)
     session.pop('usuario_nome', None)
     session.pop('usuario_administrador', None)
-    flash('Você foi desconectado.', 'info')
-    return redirect(url_for('login'))
+    return redirect(url_for('index'))
 
-# Página de carrinho de compras
-@app.route('/carrinho')
-def carrinho():
-    carrinho = db.ListaCarrinho()
-    return render_template('carrinho.html', carrinho=carrinho)
+@app.route('/cadastro', methods=['GET', 'POST'])
+def cadastro_usuario():
+    if request.method == 'POST':
+        nome = request.form.get('nome')
+        cpf = request.form.get('cpf')
+        email = request.form.get('email')
+        senha = request.form.get('senha')
+        endereco = request.form.get('endereco')
+        telefone = request.form.get('telefone')
+        administrador = request.form.get('administrador') == '1'
 
-
-@app.route('/adicionar_ao_carrinho', methods=['POST'])
-def adicionar_ao_carrinho():
-    id_produto = request.form.get('id_produto')
-    quantidade = request.form.get('quantidade')
-
-    if id_produto and quantidade:
-        db = Database()
-        # Verificar se o usuário está logado e tem um ID de usuário
-        id_usuario = session.get('user_id')  # Você pode ajustar isso conforme a lógica de autenticação
-
-        if id_usuario:
-            db.inserirCarrinho(id_produto, quantidade, id_usuario)
-            db.fecha()
-            return redirect(url_for('index'))
+        if nome and cpf and email and senha and endereco and telefone:
+            usuario = Usuario(
+                nome=nome,
+                cpf=cpf,
+                email=email,
+                senha=senha,
+                endereco=endereco,
+                telefone=telefone,
+                administrador=administrador
+            )
+            db.inserirUsuario(usuario)
+            return redirect(url_for('login_usuario'))
         else:
-            return "Usuário não autenticado", 403
-    return "Dados inválidos", 400
+            return "Todos os campos são obrigatórios", 400
 
-# Página de cadastro de produto
-@app.route('/produto/cadastro', methods=['GET', 'POST'])
-def cadastro_produto():
-    if 'usuario_id' not in session or not session.get('usuario_administrador'):
-        flash('Acesso negado. Apenas administradores podem acessar esta página.', 'danger')
-        return redirect(url_for('index'))
-
-    if request.method == 'POST':
-        nome = request.form['nome']
-        descricao = request.form['descricao']
-        preco = request.form['preco']
-        quantidade = request.form['quantidade']
-        categoria_id = request.form['categoria_id']  # Correto: obtendo o ID da categoria
-
-        produto = Produtos(nome, descricao, preco, quantidade, categoria_id)
-        db.inserirProdutos(produto)
-
-        flash('Produto cadastrado com sucesso!', 'success')
-        return redirect(url_for('index'))
-
-    categorias = db.ListaCategorias()  # Obtendo categorias para exibir no formulário
-    return render_template('cadastro_produto.html', categorias=categorias)
-
-# Página de categorias
-@app.route('/categoria')
-def categoria():
-    categorias = db.ListaCategorias()
-    return render_template('categoria.html', categorias=categorias)
-
-# Página de cadastro de categorias
-@app.route('/cadastro_categoria', methods=['GET', 'POST'])
-def cadastro_categoria():
-    if request.method == 'POST':
-        nome = request.form['nome']
-        descricao = request.form['descricao']
-        cat = Categoria(nome, descricao)
-        db.inserirCategoria(cat)
-        flash('Categoria cadastrada com sucesso!', 'success')
-        return redirect(url_for('categoria'))
-    return render_template('cadastro_categoria.html')
-
-# Página de endereços
-@app.route('/endereco')
-def endereco():
-    enderecos = db.ListaEndereco()
-    return render_template('endereco.html', enderecos=enderecos)
-
-# Página de pedidos
-@app.route('/pedido')
-def pedido():
-    pedidos = db.ListaPedido()
-    return render_template('pedido.html', pedidos=pedidos)
+    return render_template('cadastro.html')
 
 if __name__ == '__main__':
     app.run(debug=True)

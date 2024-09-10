@@ -34,14 +34,14 @@
                 <!-- Loop para exibir produtos dinamicamente -->
                 {% for produto in produtos %}
                 <div class="produto">
-                    <h3>{{ produto.nome }}</h3>
-                    <p>{{ produto.descricao }}</p>
-                    <p>R$ {{ produto.preco }}</p>
+                    <h3>{{ produto['Nome'] }}</h3>
+                    <p>{{ produto['Descrição'] }}</p>
+                    <p>R$ {{ produto['Preço'] }}</p>
                     <form action="{{ url_for('adicionar_carrinho', id_produto=produto.idProduto) }}" method="post">
-                        <label for="quantidade">Quantidade:</label>
-                        <input type="number" id="quantidade" name="quantidade" min="1" required>
+                         <input type="number" name="quantidade" min="1" value="1">
                         <button type="submit">Adicionar ao Carrinho</button>
                     </form>
+
                 </div>
                 {% endfor %}
             </div>
