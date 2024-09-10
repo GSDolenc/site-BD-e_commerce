@@ -28,20 +28,35 @@ class Database:
         except Error as e:
             print("Erro ao conectar ao MySQL", e)
 
-    def ListaCategorias(self):
+    def listarCategorias(self):
         if self.conexao.is_connected():
             cursor = self.conexao.cursor()
-            cursor.execute("SELECT * FROM Categoria;")
-            registros = cursor.fetchall()
-            return registros
-        return []
+            sql_query = "SELECT * FROM Categoria"
+            cursor.execute(sql_query)
+            categorias = cursor.fetchall()
+            return categorias
 
-    def inserirCategoria(self, categoria):
+    def listarProdutosPorCategoria(self, id_categoria):
         if self.conexao.is_connected():
             cursor = self.conexao.cursor()
-            sql_insert = "INSERT INTO Categoria (nome, descricao) VALUES (%s, %s)"
-            valores = (categoria.nome, categoria.descricao)
-            cursor.execute(sql_insert, valores)
+            sql_query = "SELECT * FROM Produto WHERE Categoria_idCategoria = %s"
+            cursor.execute(sql_query, (id_categoria,))
+            produtos = cursor.fetchall()
+            return produtos
+
+    def buscarCategoriaPorId(self, id_categoria):
+        if self.conexao.is_connected():
+            cursor = self.conexao.cursor()
+            sql_query = "SELECT * FROM Categoria WHERE idCategoria = %s"
+            cursor.execute(sql_query, (id_categoria,))
+            categoria = cursor.fetchone()
+            return categoria
+
+    def inserirCategoria(self, nome, descricao):
+        if self.conexao.is_connected():
+            cursor = self.conexao.cursor()
+            sql_insert = "INSERT INTO Categoria (Nome, Descricao) VALUES (%s, %s)"
+            cursor.execute(sql_insert, (nome, descricao))
             self.conexao.commit()
 
     def ListaProdutos(self):

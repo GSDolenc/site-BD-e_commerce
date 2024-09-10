@@ -27,13 +27,13 @@
             <div class="categorias-lista">
                 {% if categorias %}
                     <ul>
-                        {% for categoria in categorias %}
-                            <li>
-                                <h2>{{ categoria[1] }}</h2>
-                                <p>{{ categoria[2] }}</p>
-                            </li>
-                        {% endfor %}
-                    </ul>
+    {% for categoria in categorias %}
+        <li>
+            <h2><a href="{{ url_for('produtos_por_categoria', id_categoria=categoria[0]) }}">{{ categoria[1] }}</a></h2>
+            <p>{{ categoria[2] }}</p>
+        </li>
+    {% endfor %}
+</ul>
                 {% else %}
                     <p>Não há categorias disponíveis.</p>
                 {% endif %}

@@ -13,6 +13,25 @@ def index():
     produtos = db.ListaProdutos()
     return render_template('index.html', produtos=produtos)
 
+@app.route('/categoria')
+def listar_categorias():
+    categorias = db.listarCategorias()
+    return render_template('categoria.html', categorias=categorias)
+
+@app.route('/cadastro_categoria', methods=['GET', 'POST'])
+def cadastrar_categoria():
+    if request.method == 'POST':
+        nome = request.form.get('nome')
+        descricao = request.form.get('descricao')
+
+        if nome and descricao:
+            db.inserirCategoria(nome, descricao)
+            return redirect(url_for('listar_categorias'))
+        else:
+            return "Todos os campos são obrigatórios", 400
+
+    return render_template('cadastro_categoria.html')
+
 @app.route('/adicionar_carrinho/<int:id_produto>', methods=['POST'])
 def adicionar_carrinho(id_produto):
     quantidade = request.form.get('quantidade')
@@ -23,6 +42,13 @@ def adicionar_carrinho(id_produto):
         return redirect(url_for('carrinho'))
     else:
         return redirect(url_for('login_usuario'))
+
+@app.route('/categoria/<int:id_categoria>')
+def produtos_por_categoria(id_categoria):
+    produtos = db.listarProdutosPorCategoria(id_categoria)
+    categoria = db.buscarCategoriaPorId(id_categoria)  # Opcional, para exibir o nome da categoria
+    return render_template('produtos_categoria.html', produtos=produtos, categoria=categoria)
+
 
 @app.route('/carrinho')
 def carrinho():
@@ -42,6 +68,7 @@ def limpar_carrinho():
     db.limparCarrinho(id_usuario)
 
     return redirect(url_for('carrinho'))
+
 
 
 @app.route('/finalizar_compra', methods=['GET', 'POST'])
