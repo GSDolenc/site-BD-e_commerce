@@ -11,11 +11,11 @@
         <nav>
             <div class="logo">Eletrônicos</div>
             <ul>
-                <li><a href="/">Home</a></li>
-                <li><a href="/produto">Produtos</a></li>
-                <li><a href="/categoria">Categorias</a></li>
-                <li><a href="/carrinho">Carrinho</a></li>
-                <li><a href="/usuario">Usuário</a></li>
+                <li><a href="{{ url_for('index') }}">Home</a></li>
+                <li><a href="{{ url_for('produtos') }}">Produtos</a></li>
+                <li><a href="{{ url_for('listar_categorias') }}">Categorias</a></li>
+                <li><a href="{{ url_for('carrinho') }}">Carrinho</a></li>
+                <li><a href="{{ url_for('usuario') }}">Usuário</a></li>
             </ul>
         </nav>
     </header>
@@ -23,17 +23,17 @@
     <main>
         <section class="categoria">
             <h1>Categorias</h1>
-            <a href="/cadastro_categoria" class="cta-button">Cadastrar Nova Categoria</a>
+            <a href="{{ url_for('cadastrar_categoria') }}" class="cta-button">Cadastrar Nova Categoria</a>
             <div class="categorias-lista">
                 {% if categorias %}
                     <ul>
-    {% for categoria in categorias %}
-        <li>
-            <h2><a href="{{ url_for('produtos_por_categoria', id_categoria=categoria[0]) }}">{{ categoria[1] }}</a></h2>
-            <p>{{ categoria[2] }}</p>
-        </li>
-    {% endfor %}
-</ul>
+                        {% for categoria in categorias %}
+                            <li>
+                                <h2><a href="{{ url_for('produtos_por_categoria', id_categoria=categoria.idCategoria) }}">{{ categoria.Nome }}</a></h2>
+                                <p>{{ categoria.Descricao }}</p>
+                            </li>
+                        {% endfor %}
+                    </ul>
                 {% else %}
                     <p>Não há categorias disponíveis.</p>
                 {% endif %}
