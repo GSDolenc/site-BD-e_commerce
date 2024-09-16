@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Escolha de Pagamento</title>
+</head>
+<body>
+    <h1>Escolha o Método de Pagamento</h1>
+    <form action="{{ url_for('processar_pagamento', pedido_id=pedido_id) }}" method="post">
+        <label>
+            <input type="radio" name="tipoPagamento" value="PIX" required> PIX
+        </label><br>
+        <label>
+            <input type="radio" name="tipoPagamento" value="Cartão de Crédito" required> Cartão de Crédito
+        </label><br>
+        <div id="info-cartao" style="display: none;">
+            <label for="numeroCartao">Número do Cartão:</label>
+            <input type="text" id="numeroCartao" name="numeroCartao"><br>
+            <label for="nomeCartao">Nome no Cartão:</label>
+            <input type="text" id="nomeCartao" name="nomeCartao"><br>
+            <label for="dataExpiracao">Data de Expiração:</label>
+            <input type="text" id="dataExpiracao" name="dataExpiracao"><br>
+        </div>
+        <input type="hidden" name="pedido_id" value="{{ pedido_id }}">
+        <button type="submit">Finalizar Pagamento</button>
+    </form>
+    <script>
+        document.querySelectorAll('input[name="tipoPagamento"]').forEach(function (elem) {
+            elem.addEventListener('change', function () {
+                if (this.value === 'Cartão de Crédito') {
+                    document.getElementById('info-cartao').style.display = 'block';
+                } else {
+                    document.getElementById('info-cartao').style.display = 'none';
+                }
+            });
+        });
+    </script>
+</body>
+</html>

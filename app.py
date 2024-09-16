@@ -65,6 +65,9 @@ def produtos():
 # Adiciona um novo produto
 @app.route('/adicionar_produto', methods=['GET', 'POST'])
 def adicionar_produto():
+    if not session.get('administrador'):
+        return "Acesso negado", 403
+
     categorias = db.listarCategorias()
     if request.method == 'POST':
         nome = request.form['nome']
@@ -104,10 +107,11 @@ def editar_produto(id_produto):
 
 @app.route('/excluir_produto/<int:id_produto>', methods=['POST'])
 def excluir_produto(id_produto):
+    if not session.get('administrador'):
+        return "Acesso negado", 403
+
     db.removerProduto(id_produto)
     return redirect(url_for('produtos'))
-
-
 
 
 
@@ -232,10 +236,11 @@ def processar_pagamento():
 # Página do perfil do usuário
 @app.route('/usuario')
 def usuario():
-    if 'id_usuario' not in session:
+    id_usuario = session.get('id_usuario')
+    if not id_usuario:
         return redirect(url_for('login_usuario'))
 
-    usuario = db.buscarUsuarioPorId(session['id_usuario'])
+    usuario = db.buscarUsuarioPorId(id_usuario)
     return render_template('usuario.html', usuario=usuario)
 
 # Login de usuários
@@ -245,59 +250,42 @@ def login_usuario():
         email = request.form.get('email')
         senha = request.form.get('senha')
 
-        usuario = db.buscarUsuario(email, senha)
+        usuario = db.validarUsuario(email, senha)
 
         if usuario:
             session['id_usuario'] = usuario['IDUsuário']
             session['usuario_nome'] = usuario['Nome']
             session['administrador'] = usuario['Administrador']
             return redirect(url_for('index'))
-        else:
-            return "Email ou senha incorretos", 400
+
+        return "Email ou senha inválidos", 401
 
     return render_template('login.html')
 
-# Logout de usuários
+# Cadastro de usuários
+@app.route('/cadastro', methods=['GET', 'POST'])
+def cadastro_usuario():
+    if request.method == 'POST':
+        nome = request.form.get('nome')
+        cpf = request.form.get('cpf')
+        email = request.form.get('email')
+        senha = request.form.get('senha')
+        endereco = request.form.get('endereco')
+        telefone = request.form.get('telefone')
+        administrador = request.form.get('administrador') == 'on'
+
+        db.inserirUsuario(nome, cpf, email, senha, endereco, telefone, administrador)
+        return redirect(url_for('login_usuario'))
+
+    return render_template('cadastro.html')
+
+# Logout
 @app.route('/logout')
 def logout():
     session.pop('id_usuario', None)
     session.pop('usuario_nome', None)
     session.pop('administrador', None)
     return redirect(url_for('index'))
-
-# Cadastro de novos usuários
-@app.route('/cadastro', methods=['GET', 'POST'])
-def cadastro_usuario():
-    if request.method == 'POST':
-        nome = request.form.get('nome')
-        cpf = request.form.get('cpf')  # Corrigido para "cpf"
-        email = request.form.get('email')
-        senha = request.form.get('senha')
-        endereco = request.form.get('endereco')
-        telefone = request.form.get('telefone')
-        administrador = request.form.get('administrador') == '1'
-
-        if nome and cpf and email and senha and endereco and telefone:
-            usuario = Usuario(
-                nome=nome,
-                cpf=cpf,
-                email=email,
-                senha=senha,
-                endereco=endereco,
-                telefone=telefone,
-                administrador=administrador
-            )
-            db.inserirUsuario(usuario)  # Insere o novo usuário no banco de dados
-            return redirect(url_for('login_usuario'))
-        else:
-            return "Todos os campos são obrigatórios", 400
-
-    return render_template('cadastro.html')
-
-@app.route('/verificar_sessao')
-def verificar_sessao():
-    administrador = session.get('administrador')
-    return f"Administrador: {administrador}"
 
 if __name__ == '__main__':
     app.run(debug=True)
