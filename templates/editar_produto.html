@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editar Produto</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <header>
+        <div class="logo">Minha Loja</div>
+        <nav>
+            <ul>
+                <li><a href="{{ url_for('index') }}">Home</a></li>
+                <li><a href="{{ url_for('produtos') }}">Produtos</a></li>
+                <li><a href="{{ url_for('logout') }}">Sair</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <h1>Editar Produto</h1>
+        <form action="{{ url_for('editar_produto', id_produto=produto['idProduto']) }}" method="POST">
+            <label for="nome">Nome:</label>
+            <input type="text" id="nome" name="nome" value="{{ produto['Nome'] }}" required><br>
+
+            <label for="descricao">Descrição:</label>
+            <input type="text" id="descricao" name="descricao" value="{{ produto['Descrição'] }}" required><br>
+
+            <label for="preco">Preço:</label>
+            <input type="number" id="preco" name="preco" value="{{ produto['Preço'] }}" required><br>
+
+            <label for="quantidade">Quantidade em Estoque:</label>
+            <input type="number" id="quantidade" name="quantidade" value="{{ produto['Quantidadeemestoque'] }}" required><br>
+
+            <label for="categoria_id">Categoria:</label>
+            <select id="categoria_id" name="categoria_id">
+                {% for categoria in categorias %}
+                    <option value="{{ categoria['idCategoria'] }}" {% if categoria['idCategoria'] == produto['Categoria_idCategoria'] %}selected{% endif %}>
+                        {{ categoria['nome'] }}
+                    </option>
+                {% endfor %}
+            </select><br>
+
+            <button type="submit" class="cta-button">Salvar Alterações</button>
+        </form>
+    </main>
+
+    <footer>
+        <p>&copy; 2024 - Todos os direitos reservados.</p>
+    </footer>
+</body>
+</html>

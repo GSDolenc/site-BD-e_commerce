@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Finalizar Compra</title>
+    <title>Adicionar Endereço</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
@@ -24,10 +24,21 @@
     </header>
 
     <main>
-        <h1>Finalizar Compra</h1>
-        <p>Seu pedido foi finalizado com sucesso!</p>
-        <form action="{{ url_for('finalizar_compra') }}" method="POST">
-            <button type="submit">Voltar para a Home</button>
+        <h1>Adicionar Endereço</h1>
+        <form method="POST">
+            <label for="rua">Rua:</label>
+            <input type="text" id="rua" name="rua" required>
+            <label for="numero">Número:</label>
+            <input type="number" id="numero" name="numero" required>
+            <label for="cidade">Cidade:</label>
+            <input type="text" id="cidade" name="cidade" required>
+            <label for="estado">Estado:</label>
+            <input type="text" id="estado" name="estado" required>
+            <label for="cep">CEP:</label>
+            <input type="text" id="cep" name="cep" required>
+            <label for="pais">Pais:</label>
+            <input type="text" id="pais" name="pais" required>
+            <button type="submit">Salvar Endereço</button>
         </form>
     </main>
 

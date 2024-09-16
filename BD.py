@@ -60,6 +60,18 @@ class Database:
             cursor.execute(sql_insert, (nome, descricao))
             self.conexao.commit()
 
+    def removerCategoria(self, id_categoria):
+        """Remove uma categoria pelo ID."""
+        try:
+            if self.conexao.is_connected():
+                cursor = self.conexao.cursor()
+                sql_delete = "DELETE FROM Categoria WHERE idCategoria = %s"
+                cursor.execute(sql_delete, (id_categoria,))
+                self.conexao.commit()
+                print(f"Categoria {id_categoria} removida")  # Depuração
+        except mysql.connector.Error as err:
+            print(f"Erro ao remover categoria: {err}")
+
     # ==========================================
     # FUNÇÕES PARA PRODUTOS
     # ==========================================
@@ -104,7 +116,8 @@ class Database:
             return produto
         return None
 
-    def atualizarEstoque(self, id_produto, quantidade):
+    def atualizarEstoque(self, id_produto, novo_estoque):
+        """Atualiza a quantidade em estoque de um produto."""
         if self.conexao.is_connected():
             cursor = self.conexao.cursor()
             sql_update = """
@@ -112,17 +125,43 @@ class Database:
                 SET Quantidadeemestoque = %s
                 WHERE idProduto = %s
             """
-            cursor.execute(sql_update, (quantidade, id_produto))
+            cursor.execute(sql_update, (novo_estoque, id_produto))
             self.conexao.commit()
-            print(f"Estoque atualizado para o produto {id_produto}: {quantidade}")  # Depuração
+            cursor.close()
 
     def removerProduto(self, id_produto):
+        """Remove um produto do banco de dados e atualiza o estoque se necessário."""
         if self.conexao.is_connected():
             cursor = self.conexao.cursor()
-            sql_delete = "DELETE FROM Produto WHERE idProduto = %s"
-            cursor.execute(sql_delete, (id_produto,))
-            self.conexao.commit()
-            print(f"Produto {id_produto} removido")  # Depuração
+            try:
+                # Remover o produto do carrinho antes de removê-lo da tabela de produtos
+                sql_remove_carrinho = "DELETE FROM Carrinho WHERE IDProduto = %s"
+                cursor.execute(sql_remove_carrinho, (id_produto,))
+
+                # Agora remover o produto da tabela de produtos
+                sql_delete = "DELETE FROM Produto WHERE idProduto = %s"
+                cursor.execute(sql_delete, (id_produto,))
+
+                self.conexao.commit()
+            except Exception as e:
+                self.conexao.rollback()
+                raise e
+            finally:
+                cursor.close()
+
+    def atualizarProduto(self, id_produto, nome, descricao, preco, quantidade, categoria_id):
+        try:
+            with self.conexao.cursor() as cursor:
+                sql = """
+                UPDATE Produto
+                SET Nome = %s, Descricao = %s, Preço = %s, Quantidadeemestoque = %s, Categoria_idCategoria = %s
+                WHERE idProduto = %s
+                """
+                cursor.execute(sql, (nome, descricao, preco, quantidade, categoria_id, id_produto))
+                self.conexao.commit()
+        except Exception as e:
+            print(f"Erro ao atualizar produto: {e}")
+            self.conexao.rollback()
 
     # ==========================================
     # FUNÇÕES PARA CARRINHO DE COMPRAS
@@ -133,7 +172,7 @@ class Database:
         if self.conexao.is_connected():
             cursor = self.conexao.cursor(dictionary=True)  # Retorna dicionários ao invés de tuplas
             sql_query = """
-                SELECT p.Nome, c.Quantidade, p.Preço
+                SELECT p.idProduto AS IDProduto, p.Nome, c.Quantidade, p.Preço
                 FROM Carrinho c
                 JOIN Produto p ON c.IDProduto = p.idProduto
                 WHERE c.IDUsuário = %s
@@ -180,12 +219,8 @@ class Database:
         """Insere um novo usuário no banco de dados."""
         if self.conexao.is_connected():
             cursor = self.conexao.cursor()
-            sql_insert = """
-                INSERT INTO Usuario (Nome, CPF, Email, Senha, Endereço, Telefone, Administrador)
-                VALUES (%s, %s, %s, %s, %s, %s, %s)
-            """
-            valores = (usuario.nome, usuario.CPF, usuario.email, usuario.senha, usuario.endereco, usuario.telefone,
-                       usuario.administrador)
+            sql_insert = "INSERT INTO usuario (Nome, CPF, Email, Senha, Endereco, Telefone, Administrador) VALUES (%s, %s, %s, %s, %s, %s, %s)"
+            valores = (usuario.nome, usuario.cpf, usuario.email, usuario.senha, usuario.endereco, usuario.telefone, usuario.administrador)
             cursor.execute(sql_insert, valores)
             self.conexao.commit()
 
@@ -202,14 +237,28 @@ class Database:
             return usuario
         return None
 
-    def buscarUsuario(self, email, senha):
-        """Busca um usuário pelo email e senha."""
+    def atualizarUsuario(self, id_usuario, nome, cpf, email, senha, endereco, telefone, administrador):
+        """Atualiza as informações de um usuário existente."""
+        if self.conexao.is_connected():
+            cursor = self.conexao.cursor()
+            sql_update = """
+                UPDATE Usuario
+                SET Nome = %s, CPF = %s, Email = %s, Senha = %s, Endereco = %s, Telefone = %s, Administrador = %s
+                WHERE IDUsuário = %s
+            """
+            cursor.execute(sql_update, (nome, cpf, email, senha, endereco, telefone, administrador, id_usuario))
+            self.conexao.commit()
+
+    def validarUsuario(self, email, senha):
+        """Valida as credenciais do usuário para login."""
         if self.conexao.is_connected():
             cursor = self.conexao.cursor(dictionary=True)
-            query = "SELECT * FROM Usuario WHERE Email = %s AND Senha = %s"
-            cursor.execute(query, (email, senha))
+            sql_select = """
+                SELECT * FROM Usuario
+                WHERE Email = %s AND Senha = %s
+            """
+            cursor.execute(sql_select, (email, senha))
             usuario = cursor.fetchone()
-            cursor.close()
             return usuario
         return None
 
@@ -217,58 +266,54 @@ class Database:
     # FUNÇÕES PARA PEDIDOS
     # ==========================================
 
-    def ListaPedido(self):
-        """Lista todos os pedidos realizados."""
-        if self.conexao.is_connected():
-            cursor = self.conexao.cursor()
-            cursor.execute("SELECT * FROM Pedido;")
-            registros = cursor.fetchall()
-            return registros
-        return []
-
-    def inserirPedido(self, pedido):
+    def inserirPedido(self, id_usuario, data_pedido, status_pedido):
         """Insere um novo pedido no banco de dados."""
-        if self.conexao.is_connected():
-            cursor = self.conexao.cursor()
-            sql_insert = """
-                INSERT INTO Pedido (DataPedido, IDUsuário, Status)
-                VALUES (%s, %s, %s)
-            """
-            valores = (pedido.data_pedido, pedido.id_usuario, pedido.status)
-            cursor.execute(sql_insert, valores)
-            self.conexao.commit()
+        try:
+            if self.conexao.is_connected():
+                cursor = self.conexao.cursor()
+                sql_insert = """
+                    INSERT INTO Pedido (IDUsuário, Data_pedido, Status_pedido)
+                    VALUES (%s, %s, %s)
+                """
+                valores = (id_usuario, data_pedido, status_pedido)
+                cursor.execute(sql_insert, valores)
+                self.conexao.commit()
+                return cursor.lastrowid
+        except Exception as e:
+            print(f"Erro ao inserir pedido: {e}")
+            self.conexao.rollback()
+            raise e
 
-    # ==========================================
-    # FUNÇÕES PARA ENDEREÇOS
-    # ==========================================
-
-    def ListaEndereco(self):
-        """Lista todos os endereços cadastrados."""
+    def listarPedidos(self):
+        """Lista todos os pedidos do banco de dados."""
         if self.conexao.is_connected():
-            cursor = self.conexao.cursor()
-            cursor.execute("SELECT * FROM Endereco;")
-            registros = cursor.fetchall()
-            return registros
+            cursor = self.conexao.cursor(dictionary=True)
+            cursor.execute("SELECT * FROM Pedido")
+            pedidos = cursor.fetchall()
+            return pedidos
         return []
 
-    def inserirEndereco(self, endereco):
-        """Insere um novo endereço no banco de dados."""
+    def buscarPedidoPorId(self, id_pedido):
+        """Busca um pedido específico pelo ID."""
         if self.conexao.is_connected():
-            cursor = self.conexao.cursor()
-            sql_insert = """
-                INSERT INTO Endereco (Rua, Numero, Cidade, Estado, CEP, Pais, IDUsuário)
-                VALUES (%s, %s, %s, %s, %s, %s, %s)
-            """
-            valores = (endereco.rua, endereco.numero, endereco.cidade, endereco.estado, endereco.CEP, endereco.pais, endereco.IDUsuário)
-            cursor.execute(sql_insert, valores)
-            self.conexao.commit()
+            cursor = self.conexao.cursor(dictionary=True)
+            sql_query = "SELECT * FROM Pedido WHERE idPedido = %s"
+            cursor.execute(sql_query, (id_pedido,))
+            pedido = cursor.fetchone()
+            return pedido
+        return None
 
     # ==========================================
-    # FUNÇÃO PARA FECHAR CONEXÃO
+    # FECHAR CONEXÃO
     # ==========================================
 
     def fecha(self):
         """Fecha a conexão com o banco de dados."""
-        if self.conexao.is_connected():
+        if self.conexao and self.conexao.is_connected():
             self.conexao.close()
-            print("Conexão ao MySQL encerrada")
+            print("Conexão com o MySQL fechada")
+
+# Testando a classe Database
+if __name__ == "__main__":
+    db = Database()
+    db.fecha()
