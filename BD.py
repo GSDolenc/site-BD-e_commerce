@@ -16,7 +16,7 @@ class Database:
                 host='localhost',
                 database='mydb',
                 user='root',
-                password='root'
+                password='Root#123'
             )
             if self.conexao.is_connected():
                 db_info = self.conexao.get_server_info()
@@ -177,17 +177,13 @@ class Database:
         return []
 
     def inserirUsuario(self, usuario):
-        """Insere um novo usuário no banco de dados."""
-        if self.conexao.is_connected():
-            cursor = self.conexao.cursor()
-            sql_insert = """
-                INSERT INTO Usuario (Nome, CPF, Email, Senha, Endereço, Telefone, Administrador)
-                VALUES (%s, %s, %s, %s, %s, %s, %s)
-            """
-            valores = (usuario.nome, usuario.CPF, usuario.email, usuario.senha, usuario.endereco, usuario.telefone,
-                       usuario.administrador)
-            cursor.execute(sql_insert, valores)
-            self.conexao.commit()
+            """Insere um novo usuário no banco de dados."""
+            if self.conexao.is_connected():
+                cursor = self.conexao.cursor()
+                sql_insert = "INSERT INTO usuario (Nome, CPF, Email, Senha, Endereco, Telefone, Administrador) VALUES (%s, %s, %s, %s, %s, %s, %s)"
+                valores = (usuario.nome, usuario.cpf, usuario.email, usuario.senha, usuario.endereco, usuario.telefone, usuario.administrador)
+                cursor.execute(sql_insert, valores)
+                self.conexao.commit()
 
     def buscarUsuarioPorId(self, id_usuario):
         """Busca informações de um usuário pelo ID."""

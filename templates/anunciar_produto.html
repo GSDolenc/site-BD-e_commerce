@@ -11,11 +11,11 @@
         <nav>
             <div class="logo">Eletrônicos</div>
             <ul>
-                <li><a href="{{ url_for('index') }}">Home</a></li>
-                <li><a href="{{ url_for('categoria') }}">Categorias</a></li>
-                <li><a href="{{ url_for('carrinho') }}">Carrinho</a></li>
-                <li><a href="{{ url_for('usuario') }}">Usuário</a></li>
-                <li><a href="{{ url_for('logout') }}">Logout</a></li>
+                <li><a href="{{ url_for('index') }}"><img src="{{ url_for('static', filename='home.png')}}"></a></li>
+                <li><a href="{{ url_for('categoria') }}"><img src="{{ url_for('static', filename='categoria.png')}}"></a></li>
+                <li><a href="{{ url_for('carrinho') }}"><img src="{{ url_for('static', filename='carrinho.png')}}"></a></li>
+                <li><a href="{{ url_for('usuario') }}"><img src="{{ url_for('static', filename='usuario.png')}}"></a></li>
+                <li><a href="{{ url_for('logout') }}"><img src="{{ url_for('static', filename='logout.png')}}"></a></li>
             </ul>
         </nav>
     </header>

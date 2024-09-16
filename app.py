@@ -194,7 +194,7 @@ def logout():
 def cadastro_usuario():
     if request.method == 'POST':
         nome = request.form.get('nome')
-        cpf = request.form.get('cpf')
+        cpf = request.form.get('cpf')  # Corrigido para "cpf"
         email = request.form.get('email')
         senha = request.form.get('senha')
         endereco = request.form.get('endereco')
@@ -211,7 +211,7 @@ def cadastro_usuario():
                 telefone=telefone,
                 administrador=administrador
             )
-            db.inserirUsuario(usuario)
+            db.inserirUsuario(usuario)  # Insere o novo usuário no banco de dados
             return redirect(url_for('login_usuario'))
         else:
             return "Todos os campos são obrigatórios", 400
