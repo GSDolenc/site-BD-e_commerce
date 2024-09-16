@@ -16,7 +16,7 @@ class Database:
                 host='localhost',
                 database='mydb',
                 user='root',
-                password='Root#123'
+                password='root'
             )
             if self.conexao.is_connected():
                 db_info = self.conexao.get_server_info()
@@ -154,7 +154,7 @@ class Database:
             with self.conexao.cursor() as cursor:
                 sql = """
                 UPDATE Produto
-                SET Nome = %s, Descricao = %s, Preço = %s, Quantidadeemestoque = %s, Categoria_idCategoria = %s
+                SET Nome = %s, Descrição = %s, Preço = %s, Quantidadeemestoque = %s, Categoria_idCategoria = %s
                 WHERE idProduto = %s
                 """
                 cursor.execute(sql, (nome, descricao, preco, quantidade, categoria_id, id_produto))
@@ -215,15 +215,17 @@ class Database:
             return registros
         return []
 
-    def inserirUsuario(self, usuario):
+    def inserirUsuario(self, nome, cpf, email, senha, endereco, telefone, administrador):
         """Insere um novo usuário no banco de dados."""
         if self.conexao.is_connected():
             cursor = self.conexao.cursor()
-            sql_insert = "INSERT INTO usuario (Nome, CPF, Email, Senha, Endereco, Telefone, Administrador) VALUES (%s, %s, %s, %s, %s, %s, %s)"
-            valores = (usuario.nome, usuario.cpf, usuario.email, usuario.senha, usuario.endereco, usuario.telefone, usuario.administrador)
+            sql_insert = """
+                INSERT INTO Usuario (Nome, CPF, Email, Senha, Endereco, Telefone, Administrador)
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
+            """
+            valores = (nome, cpf, email, senha, endereco, telefone, administrador)
             cursor.execute(sql_insert, valores)
             self.conexao.commit()
-
 
     def buscarUsuarioPorId(self, id_usuario):
         """Busca informações de um usuário pelo ID."""
@@ -285,7 +287,7 @@ class Database:
         """Busca um pedido pelo ID."""
         if self.conexao.is_connected():
             cursor = self.conexao.cursor(dictionary=True)
-            sql_select = """SELECT * FROM pedidoWHERE idPedido = %s"""
+            sql_select = """SELECT * FROM pedido WHERE idPedido = %s"""
             cursor.execute(sql_select, (pedido_id,))
             pedido = cursor.fetchone()
             return pedido

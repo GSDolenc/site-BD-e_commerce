@@ -277,13 +277,16 @@ def login_usuario():
 def cadastro_usuario():
     if request.method == 'POST':
         nome = request.form.get('nome')
-        cpf = request.form.get('cpf')  # Corrigido para "cpf"
+        cpf = request.form.get('cpf')
         email = request.form.get('email')
         senha = request.form.get('senha')
         endereco = request.form.get('endereco')
         telefone = request.form.get('telefone')
         administrador = request.form.get('administrador') == 'on'
 
+        # Verifique se todos os campos obrigatórios estão preenchidos
+        if not nome or not cpf or not email or not senha or not endereco or not telefone:
+            return "Preencha todos os campos obrigatórios", 400
 
         db.inserirUsuario(nome, cpf, email, senha, endereco, telefone, administrador)
         return redirect(url_for('login_usuario'))
