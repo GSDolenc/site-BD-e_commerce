@@ -277,12 +277,13 @@ def login_usuario():
 def cadastro_usuario():
     if request.method == 'POST':
         nome = request.form.get('nome')
-        cpf = request.form.get('cpf')
+        cpf = request.form.get('cpf')  # Corrigido para "cpf"
         email = request.form.get('email')
         senha = request.form.get('senha')
         endereco = request.form.get('endereco')
         telefone = request.form.get('telefone')
         administrador = request.form.get('administrador') == 'on'
+
 
         db.inserirUsuario(nome, cpf, email, senha, endereco, telefone, administrador)
         return redirect(url_for('login_usuario'))

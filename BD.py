@@ -16,7 +16,7 @@ class Database:
                 host='localhost',
                 database='mydb',
                 user='root',
-                password='root'
+                password='Root#123'
             )
             if self.conexao.is_connected():
                 db_info = self.conexao.get_server_info()
@@ -223,6 +223,7 @@ class Database:
             valores = (usuario.nome, usuario.cpf, usuario.email, usuario.senha, usuario.endereco, usuario.telefone, usuario.administrador)
             cursor.execute(sql_insert, valores)
             self.conexao.commit()
+
 
     def buscarUsuarioPorId(self, id_usuario):
         """Busca informações de um usuário pelo ID."""

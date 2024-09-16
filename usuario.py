@@ -1,4 +1,3 @@
-# usuario.py
 class Usuario:
     def __init__(self, nome, cpf, email, senha, endereco, telefone, administrador=False):
         self.nome = nome
@@ -8,6 +7,7 @@ class Usuario:
         self.endereco = endereco
         self.telefone = telefone
         self.administrador = administrador
+
 
     def validar_senha(self, senha):
         return hashlib.sha256(senha.encode()).hexdigest() == self.senha

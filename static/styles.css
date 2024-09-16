@@ -27,11 +27,28 @@ header {
     box-shadow: 0 8px 15px rgba(0, 0, 0, 0.3);
 }
 
+nav ul li a img {
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
+    align-items: right;
+    vertical-align: middle;
+    margin-right: auto; 
+    transition: opacity 0.3s ease;
+}
+
+
+nav ul li a:hover img {
+    opacity: 0.8;
+}
+
 header .logo {
     font-size: 32px;
     font-weight: 700;
     color: #ffd700; /* Dourado para o logo */
 }
+
+
 
 nav ul {
     list-style: none;
