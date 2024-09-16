@@ -3,46 +3,48 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Categorias - Loja de Eletrônicos</title>
+    <title>Categorias</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
     <header>
+        <h1>Lista de Categorias</h1>
         <nav>
-            <div class="logo">Eletrônicos</div>
             <ul>
-                <li><a href="{{ url_for('index') }}">Home</a></li>
+                <li><a href="{{ url_for('index') }}">Início</a></li>
                 <li><a href="{{ url_for('produtos') }}">Produtos</a></li>
-                <li><a href="{{ url_for('listar_categorias') }}">Categorias</a></li>
-                <li><a href="{{ url_for('carrinho') }}">Carrinho</a></li>
-                <li><a href="{{ url_for('usuario') }}">Usuário</a></li>
+                {% if session.get('administrador') %}
+                <li><a href="{{ url_for('cadastrar_categoria') }}">Cadastrar Categoria</a></li>
+                {% endif %}
             </ul>
         </nav>
     </header>
 
     <main>
-        <section class="categoria">
-            <h1>Categorias</h1>
-            <a href="{{ url_for('cadastrar_categoria') }}" class="cta-button">Cadastrar Nova Categoria</a>
-            <div class="categorias-lista">
-                {% if categorias %}
-                    <ul>
-                        {% for categoria in categorias %}
-                            <li>
-                                <h2><a href="{{ url_for('produtos_por_categoria', id_categoria=categoria.idCategoria) }}">{{ categoria.Nome }}</a></h2>
-                                <p>{{ categoria.Descricao }}</p>
-                            </li>
-                        {% endfor %}
-                    </ul>
-                {% else %}
-                    <p>Não há categorias disponíveis.</p>
-                {% endif %}
-            </div>
-        </section>
+        <h2>Categorias Disponíveis</h2>
+        <ul>
+            {% if categorias %}
+                {% for categoria in categorias %}
+                    <li>
+                        <strong>{{ categoria['nome'] }}</strong> - {{ categoria['descricao'] }}
+                        <form action="{{ url_for('produtos_por_categoria', id_categoria=categoria['idCategoria']) }}" method="get" style="display:inline;">
+                            <button type="submit">Ver Produtos</button>
+                        </form>
+                        {% if session.get('administrador') %}
+                        <form action="{{ url_for('excluir_categoria', id_categoria=categoria['idCategoria']) }}" method="POST" style="display:inline;">
+                            <button type="submit" onclick="return confirm('Tem certeza de que deseja excluir esta categoria?');">Excluir</button>
+                        </form>
+                        {% endif %}
+                    </li>
+                {% endfor %}
+            {% else %}
+                <li>Nenhuma categoria encontrada.</li>
+            {% endif %}
+        </ul>
     </main>
 
     <footer>
-        <p>&copy; 2024 Loja de Eletrônicos. Todos os direitos reservados.</p>
+        <p>&copy; 2024 Sua Empresa</p>
     </footer>
 </body>
 </html>

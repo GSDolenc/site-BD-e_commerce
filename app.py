@@ -35,11 +35,19 @@ def cadastrar_categoria():
 
         if nome and descricao:
             db.inserirCategoria(nome, descricao)
-            return redirect(url_for('listar_categorias'))  # Corrigido para o endpoint correto
+            return redirect(url_for('listar_categorias'))
         else:
             return "Todos os campos são obrigatórios", 400
 
     return render_template('cadastro_categoria.html')
+
+@app.route('/excluir_categoria/<int:id_categoria>', methods=['POST'])
+def excluir_categoria(id_categoria):
+    if not session.get('administrador'):
+        return "Acesso negado", 403
+
+    db.removerCategoria(id_categoria)
+    return redirect(url_for('listar_categorias'))
 
 # Lista produtos por categoria
 @app.route('/categoria/<int:id_categoria>')
@@ -57,6 +65,9 @@ def produtos():
 # Adiciona um novo produto
 @app.route('/adicionar_produto', methods=['GET', 'POST'])
 def adicionar_produto():
+    if not session.get('administrador'):
+        return "Acesso negado", 403
+
     categorias = db.listarCategorias()
     if request.method == 'POST':
         nome = request.form['nome']
@@ -68,6 +79,41 @@ def adicionar_produto():
         db.inserirProdutos(produto)
         return redirect(url_for('index'))
     return render_template('adicionar_produto.html', categorias=categorias)
+
+
+@app.route('/editar_produto/<int:id_produto>', methods=['GET', 'POST'])
+def editar_produto(id_produto):
+    if not session.get('administrador'):
+        return "Acesso negado", 403
+
+    produto = db.buscarProdutoPorId(id_produto)
+
+    if request.method == 'POST':
+        nome = request.form.get('nome')
+        descricao = request.form.get('descricao')
+        preco = request.form.get('preco')
+        quantidade = request.form.get('quantidade')
+        categoria_id = request.form.get('categoria_id')
+
+        if not categoria_id:
+            return "Categoria não selecionada", 400
+
+        db.atualizarProduto(id_produto, nome, descricao, preco, quantidade, categoria_id)
+        return redirect(url_for('produtos'))
+
+    categorias = db.listarCategorias()
+    return render_template('editar_produto.html', produto=produto, categorias=categorias)
+
+
+@app.route('/excluir_produto/<int:id_produto>', methods=['POST'])
+def excluir_produto(id_produto):
+    if not session.get('administrador'):
+        return "Acesso negado", 403
+
+    db.removerProduto(id_produto)
+    return redirect(url_for('produtos'))
+
+
 
 # ==========================================
 # ROTAS PARA CARRINHO DE COMPRAS
@@ -83,16 +129,9 @@ def adicionar_carrinho(id_produto):
         if quantidade and quantidade > 0:
             produto = db.buscarProdutoPorId(id_produto)
             if produto:
-                estoque = produto.get('Quantidadeemestoque', 0)
+                estoque = produto.get('QuantidadeEmEstoque', 0)
                 if quantidade <= estoque:
                     db.inserirCarrinho(id_produto, quantidade, id_usuario)
-
-                    novo_estoque = estoque - quantidade
-                    db.atualizarEstoque(id_produto, novo_estoque)
-
-                    if novo_estoque == 0:
-                        db.removerProduto(id_produto)
-
                     return redirect(url_for('carrinho'))
                 else:
                     return "Quantidade solicitada excede o estoque disponível", 400
@@ -128,26 +167,67 @@ def limpar_carrinho():
 # ==========================================
 
 # Finaliza a compra
-@app.route('/finalizar_compra', methods=['GET', 'POST'])
+@app.route('/finalizar_compra', methods=['POST'])
 def finalizar_compra():
     if 'id_usuario' not in session:
         return redirect(url_for('login_usuario'))
 
-    if request.method == 'POST':
-        carrinho_items = db.ListaCarrinho(session['id_usuario'])
-        if carrinho_items:
-            for item in carrinho_items:
-                pedido = Pedido(
-                    data_pedido=datetime.now(),
-                    id_usuario=session['id_usuario'],
-                    status='Pendente'
-                )
-                db.inserirPedido(pedido)
+    carrinho_items = db.ListaCarrinho(session['id_usuario'])
+    if carrinho_items:
+        # Criar o pedido com os nomes corretos dos parâmetros
+        pedido = Pedido(
+            data_pedido=datetime.now(),
+            id_usuario=session['id_usuario'],
+            status_pedido='Pendente'
+        )
 
-            db.limparCarrinho(session['id_usuario'])
-        return redirect(url_for('index'))
+        # Inserir o pedido e obter o ID
+        pedido_id = db.inserirPedido(pedido)
 
-    return render_template('finalizar_compra.html')
+        for item in carrinho_items:
+            id_produto = item['IDProduto']
+            quantidade = item['Quantidade']
+
+            produto = db.buscarProdutoPorId(id_produto)
+            estoque_atual = produto.get('Quantidadeemestoque', 0)
+
+            novo_estoque = estoque_atual - quantidade
+            if novo_estoque < 0:
+                novo_estoque = 0
+
+            db.atualizarEstoque(id_produto, novo_estoque)
+
+        db.limparCarrinho(session['id_usuario'])
+
+        return redirect(url_for('pagina_pagamento', pedido_id=pedido_id))
+
+    return redirect(url_for('index'))
+
+
+@app.route('/pagina_pagamento/<int:pedido_id>', methods=['GET'])
+def pagina_pagamento(pedido_id):
+    return render_template('pagina_pagamento.html', pedido_id=pedido_id)
+
+@app.route('/processar_pagamento', methods=['POST'])
+def processar_pagamento():
+    pedido_id = request.form.get('pedido_id')
+    tipo_pagamento = request.form.get('tipoPagamento')
+    valor = calcular_valor_pedido(pedido_id)  # Função para calcular o valor total do pedido
+
+    if tipo_pagamento == 'Cartão de Crédito':
+        numero_cartao = request.form.get('numeroCartao')
+        nome_cartao = request.form.get('nomeCartao')
+        data_expiracao = request.form.get('dataExpiracao')
+
+    # Inserir o pagamento na base de dados
+    db.inserirPagamento(
+        tipo_pagamento=tipo_pagamento,
+        valor=valor,
+        pedido_id=pedido_id
+    )
+
+    return redirect(url_for('index'))
+
 
 # ==========================================
 # ROTAS PARA GESTÃO DE USUÁRIOS
@@ -156,10 +236,11 @@ def finalizar_compra():
 # Página do perfil do usuário
 @app.route('/usuario')
 def usuario():
-    if 'id_usuario' not in session:
+    id_usuario = session.get('id_usuario')
+    if not id_usuario:
         return redirect(url_for('login_usuario'))
 
-    usuario = db.buscarUsuarioPorId(session['id_usuario'])
+    usuario = db.buscarUsuarioPorId(id_usuario)
     return render_template('usuario.html', usuario=usuario)
 
 # Login de usuários
@@ -169,27 +250,19 @@ def login_usuario():
         email = request.form.get('email')
         senha = request.form.get('senha')
 
-        usuario = db.buscarUsuario(email, senha)
+        usuario = db.validarUsuario(email, senha)
 
         if usuario:
             session['id_usuario'] = usuario['IDUsuário']
             session['usuario_nome'] = usuario['Nome']
             session['administrador'] = usuario['Administrador']
             return redirect(url_for('index'))
-        else:
-            return "Email ou senha incorretos", 400
+
+        return "Email ou senha inválidos", 401
 
     return render_template('login.html')
 
-# Logout de usuários
-@app.route('/logout')
-def logout():
-    session.pop('id_usuario', None)
-    session.pop('usuario_nome', None)
-    session.pop('administrador', None)
-    return redirect(url_for('index'))
-
-# Cadastro de novos usuários
+# Cadastro de usuários
 @app.route('/cadastro', methods=['GET', 'POST'])
 def cadastro_usuario():
     if request.method == 'POST':
@@ -199,29 +272,21 @@ def cadastro_usuario():
         senha = request.form.get('senha')
         endereco = request.form.get('endereco')
         telefone = request.form.get('telefone')
-        administrador = request.form.get('administrador') == '1'
+        administrador = request.form.get('administrador') == 'on'
 
-        if nome and cpf and email and senha and endereco and telefone:
-            usuario = Usuario(
-                nome=nome,
-                cpf=cpf,
-                email=email,
-                senha=senha,
-                endereco=endereco,
-                telefone=telefone,
-                administrador=administrador
-            )
-            db.inserirUsuario(usuario)  # Insere o novo usuário no banco de dados
-            return redirect(url_for('login_usuario'))
-        else:
-            return "Todos os campos são obrigatórios", 400
+
+        db.inserirUsuario(nome, cpf, email, senha, endereco, telefone, administrador)
+        return redirect(url_for('login_usuario'))
 
     return render_template('cadastro.html')
 
-@app.route('/verificar_sessao')
-def verificar_sessao():
-    administrador = session.get('administrador')
-    return f"Administrador: {administrador}"
+# Logout
+@app.route('/logout')
+def logout():
+    session.pop('id_usuario', None)
+    session.pop('usuario_nome', None)
+    session.pop('administrador', None)
+    return redirect(url_for('index'))
 
 if __name__ == '__main__':
     app.run(debug=True)
