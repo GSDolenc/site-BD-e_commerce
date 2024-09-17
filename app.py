@@ -204,9 +204,19 @@ def finalizar_compra():
     return redirect(url_for('index'))
 
 
-@app.route('/pagina_pagamento/<int:pedido_id>', methods=['GET'])
+@app.route('/pagina_pagamento/<int:pedido_id>')
 def pagina_pagamento(pedido_id):
-    return render_template('pagina_pagamento.html', pedido_id=pedido_id)
+    if 'id_usuario' not in session:
+        return redirect(url_for('login_usuario'))
+
+    # Buscar o pedido
+    pedido = db.buscarPedidoPorId(pedido_id)
+
+    if pedido:
+        return render_template('pagina_pagamento.html', pedido=pedido)
+
+    return "Pedido não encontrado", 404
+
 
 @app.route('/processar_pagamento', methods=['POST'])
 def processar_pagamento():

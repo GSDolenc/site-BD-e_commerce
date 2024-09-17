@@ -154,7 +154,7 @@ class Database:
             with self.conexao.cursor() as cursor:
                 sql = """
                 UPDATE Produto
-                SET Nome = %s, Descricao = %s, Preço = %s, Quantidadeemestoque = %s, Categoria_idCategoria = %s
+                SET Nome = %s, Descrição = %s, Preço = %s, Quantidadeemestoque = %s, Categoria_idCategoria = %s
                 WHERE idProduto = %s
                 """
                 cursor.execute(sql, (nome, descricao, preco, quantidade, categoria_id, id_produto))
@@ -227,7 +227,6 @@ class Database:
             cursor.execute(sql_insert, valores)
             self.conexao.commit()
 
-
     def buscarUsuarioPorId(self, id_usuario):
         """Busca informações de um usuário pelo ID."""
         if self.conexao.is_connected():
@@ -242,19 +241,16 @@ class Database:
         return None
 
     def atualizarUsuario(self, id_usuario, nome, cpf, email, senha, endereco, telefone, administrador):
-        """Atualiza as informações de um usuário existente."""
         if self.conexao.is_connected():
             cursor = self.conexao.cursor()
             sql_update = """
                 UPDATE Usuario
                 SET Nome = %s, CPF = %s, Email = %s, Senha = %s, Endereco = %s, Telefone = %s, Administrador = %s
-                WHERE IDUsuário = %s
-            """
+                WHERE IDUsuário = %s"""
             cursor.execute(sql_update, (nome, cpf, email, senha, endereco, telefone, administrador, id_usuario))
             self.conexao.commit()
 
     def validarUsuario(self, email, senha):
-        """Valida as credenciais do usuário para login."""
         if self.conexao.is_connected():
             cursor = self.conexao.cursor(dictionary=True)
             sql_select = """
@@ -270,26 +266,16 @@ class Database:
     # FUNÇÕES PARA PEDIDOS
     # ==========================================
 
-    def inserirPedido(self, id_usuario, data_pedido, status_pedido):
-        """Insere um novo pedido no banco de dados."""
-        try:
-            if self.conexao.is_connected():
-                cursor = self.conexao.cursor()
-                sql_insert = """
-                    INSERT INTO Pedido (IDUsuário, Data_pedido, Status_pedido)
-                    VALUES (%s, %s, %s)
-                """
-                valores = (id_usuario, data_pedido, status_pedido)
-                cursor.execute(sql_insert, valores)
-                self.conexao.commit()
-                return cursor.lastrowid
-        except Exception as e:
-            print(f"Erro ao inserir pedido: {e}")
-            self.conexao.rollback()
-            raise e
+    def inserirPedido(self, pedido):
+        if self.conexao.is_connected():
+            cursor = self.conexao.cursor()
+            sql_insert = """INSERT INTO pedido (Data_pedido, IDUsuário, Status_pedido)VALUES (%s, %s, %s)"""
+            valores = (pedido.data_pedido, pedido.id_usuario, pedido.status_pedido)
+            cursor.execute(sql_insert, valores)
+            self.conexao.commit()
+            return cursor.lastrowid
 
     def listarPedidos(self):
-        """Lista todos os pedidos do banco de dados."""
         if self.conexao.is_connected():
             cursor = self.conexao.cursor(dictionary=True)
             cursor.execute("SELECT * FROM Pedido")
@@ -297,12 +283,12 @@ class Database:
             return pedidos
         return []
 
-    def buscarPedidoPorId(self, id_pedido):
-        """Busca um pedido específico pelo ID."""
+    def buscarPedidoPorId(self, pedido_id):
+        """Busca um pedido pelo ID."""
         if self.conexao.is_connected():
             cursor = self.conexao.cursor(dictionary=True)
-            sql_query = "SELECT * FROM Pedido WHERE idPedido = %s"
-            cursor.execute(sql_query, (id_pedido,))
+            sql_select = """SELECT * FROM pedido WHERE idPedido = %s"""
+            cursor.execute(sql_select, (pedido_id,))
             pedido = cursor.fetchone()
             return pedido
         return None
@@ -312,7 +298,6 @@ class Database:
     # ==========================================
 
     def fecha(self):
-        """Fecha a conexão com o banco de dados."""
         if self.conexao and self.conexao.is_connected():
             self.conexao.close()
             print("Conexão com o MySQL fechada")
