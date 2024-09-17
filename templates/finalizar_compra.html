@@ -9,16 +9,17 @@
 <body>
     <header>
         <nav>
-            <div class="logo">Eletrônicos</div>
+            <div class="logo">Finalização de Compra</div>
             <ul>
-                <li><a href="{{ url_for('index') }}">Home</a></li>
+                <li><a href="{{ url_for('index') }}"><img src="{{ url_for('static', filename='home.png')}}"></a></li>
                 {% if session.get('id_usuario') %}
-                    <li><a href="{{ url_for('carrinho') }}">Carrinho</a></li>
-                    <li><a href="{{ url_for('logout') }}">Logout</a></li>
+                    <li><a href="{{ url_for('carrinho') }}"><img src="{{ url_for('static', filename='carrinho.png')}}"></a></li>
+                    <li><a href="{{ url_for('logout') }}"><img src="{{ url_for('static', filename='logout.png')}}"></a></li>
                 {% else %}
-                    <li><a href="{{ url_for('login_usuario') }}">Login</a></li>
+                    <li><a href="{{ url_for('login_usuario') }}"><img src="{{ url_for('static', filename='login.png')}}"></a></li>
                 {% endif %}
-                <li><a href="{{ url_for('usuario') }}">Usuário</a></li>
+                <li><a href="/produtos"><img src="{{ url_for('static', filename='produtos.png')}}"></a> </li>
+                <li><a href="{{ url_for('usuario') }}"><img src="{{ url_for('static', filename='usuario.png')}}"></a></li>
             </ul>
         </nav>
     </header>

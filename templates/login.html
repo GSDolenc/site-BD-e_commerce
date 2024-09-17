@@ -9,8 +9,15 @@
 <body>
     <header>
         <nav>
-            <a href="{{ url_for('index') }}">Home</a>
-            <a href="{{ url_for('cadastro_usuario') }}">Cadastro</a>
+            <div class="logo">Login</div>
+            <ul>
+                <li><a href="/"><img src="{{ url_for('static', filename='home.png')}}"></a></li>
+                <li><a href="/produtos"><img src="{{ url_for('static', filename='produtos.png')}}"></a> </li>
+                <li><a href="/categorias"><img src="{{ url_for('static', filename='categoria.png')}}"></a></li>
+                <li><a href="/carrinho"><img src="{{ url_for('static', filename='carrinho.png')}}"></a></li>
+                <li><a href="/usuario"><img src="{{ url_for('static', filename='usuario.png')}}"></a></li>
+                <li><a href="{{ url_for('cadastro_usuario') }}"><img src="{{ url_for('static', filename='cadastro.png')}}"></a></li>
+            </ul>
         </nav>
     </header>
 

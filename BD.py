@@ -215,12 +215,15 @@ class Database:
             return registros
         return []
 
-    def inserirUsuario(self, usuario):
+    def inserirUsuario(self, nome, cpf, email, senha, endereco, telefone, administrador):
         """Insere um novo usuário no banco de dados."""
         if self.conexao.is_connected():
             cursor = self.conexao.cursor()
-            sql_insert = "INSERT INTO usuario (Nome, CPF, Email, Senha, Endereco, Telefone, Administrador) VALUES (%s, %s, %s, %s, %s, %s, %s)"
-            valores = (usuario.nome, usuario.cpf, usuario.email, usuario.senha, usuario.endereco, usuario.telefone, usuario.administrador)
+            sql_insert = """
+                INSERT INTO Usuario (Nome, CPF, Email, Senha, Endereco, Telefone, Administrador)
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
+            """
+            valores = (nome, cpf, email, senha, endereco, telefone, administrador)
             cursor.execute(sql_insert, valores)
             self.conexao.commit()
 
