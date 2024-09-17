@@ -8,7 +8,7 @@
 
 /* Estilo geral do corpo */
 body {
-    background-color: #1c1c1e;
+    background:linear-gradient(45deg, rgb(154, 154, 154), rgb(17, 17, 17));;
     color: #f5f5f7;
     line-height: 1.8;
     padding: 20px;
@@ -17,7 +17,7 @@ body {
 
 /* Cabeçalho e navegação */
 header {
-    background-color: #262628;
+    background:linear-gradient(45deg, rgb(33, 33, 33), rgb(95, 95, 95));;
     padding: 20px;
     border-radius: 10px;
     margin-bottom: 40px;
@@ -30,7 +30,7 @@ header {
 header .logo {
     font-size: 32px;
     font-weight: 700;
-    color: #ffd700;
+    color: #f2ff00;
 }
 
 /* Estilo da navegação */
