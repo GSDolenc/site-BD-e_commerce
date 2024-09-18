@@ -9,12 +9,13 @@
 <body>
     <header>
         <nav>
-            <div class="logo">Eletrônicos</div>
+            <div class="logo">Categoria dos Produtos</div>
             <ul>
-                <li><a href="/">Home</a></li>
-                <li><a href="/categoria">Categorias</a></li>
-                <li><a href="/carrinho">Carrinho</a></li>
-                <li><a href="/usuario">Usuário</a></li>
+                <li><a href="/"><img src="{{ url_for('static', filename='home.png')}}"></a></li>
+                <li><a href="/produtos"><img src="{{ url_for('static', filename='produtos.png')}}"></a> </li>
+                <li><a href="/categorias"><img src="{{ url_for('static', filename='categoria.png')}}"></a></li>
+                <li><a href="/carrinho"><img src="{{ url_for('static', filename='carrinho.png')}}"></a></li>
+                <li><a href="/usuario"><img src="{{ url_for('static', filename='usuario.png')}}"></a></li>
             </ul>
         </nav>
     </header>
@@ -30,8 +31,6 @@
                             <p>{{ produto[2] }}</p>
                             <p>Preço: R$ {{ produto[3] }}</p>
                             <form action="{{ url_for('adicionar_carrinho', id_produto=produto[0]) }}" method="POST">
-                                <label for="quantidade">Quantidade:</label>
-                                <input type="number" name="quantidade" value="1" min="1" required>
                                 <button type="submit">Adicionar ao Carrinho</button>
                             </form>
                         </li>

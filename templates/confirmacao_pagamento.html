@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Confirmação de Pagamento</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <h1>Confirmação de Pagamento</h1>
+    <p>Seu pagamento foi realizado com sucesso!</p>
+    <p>ID do Pedido: {{ pedido_id }}</p>
+
+    {% if itens_pedido %}
+        <h2>Detalhes do Pedido</h2>
+        <ul>
+            {% for item in itens_pedido %}
+                <li>
+                    Produtos: {{ item.Nome }}<br>
+                    Quantidade: {{ item.Quantidade }}<br>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>Detalhes do pedido não disponíveis.</p>
+    {% endif %}
+
+    <a href="{{ url_for('index') }}" class="button">Voltar para a Página Inicial</a>
+</body>
+</html>

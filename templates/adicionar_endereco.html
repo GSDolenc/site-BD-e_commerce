@@ -9,23 +9,25 @@
 <body>
     <header>
         <nav>
-            <div class="logo">Eletrônicos</div>
+            <div class="logo">Adicionar o Endereço</div>
             <ul>
-                <li><a href="{{ url_for('index') }}">Home</a></li>
+                <li><a href="{{ url_for('index') }}"><img src="{{ url_for('static', filename='home.png') }}"></a></li>
+                <li><a href="{{ url_for('produtos') }}"><img src="{{ url_for('static', filename='produtos.png') }}"></a></li>
+                <li><a href="{{ url_for('categorias') }}"><img src="{{ url_for('static', filename='categoria.png') }}"></a></li>
                 {% if session.get('id_usuario') %}
-                    <li><a href="{{ url_for('carrinho') }}">Carrinho</a></li>
-                    <li><a href="{{ url_for('logout') }}">Logout</a></li>
+                    <li><a href="{{ url_for('carrinho') }}"><img src="{{ url_for('static', filename='carrinho.png') }}"></a></li>
+                    <li><a href="{{ url_for('logout') }}"><img src="{{ url_for('static', filename='logout.png') }}"></a></li>
                 {% else %}
-                    <li><a href="{{ url_for('login_usuario') }}">Login</a></li>
+                    <li><a href="{{ url_for('login_usuario') }}"><img src="{{ url_for('static', filename='login.png') }}"></a></li>
                 {% endif %}
-                <li><a href="{{ url_for('usuario') }}">Usuário</a></li>
+                <li><a href="{{ url_for('usuario') }}"><img src="{{ url_for('static', filename='usuario.png') }}"></a></li>
             </ul>
         </nav>
     </header>
 
     <main>
         <h1>Adicionar Endereço</h1>
-        <form method="POST">
+        <form method="POST" action="{{ url_for('adicionar_endereco') }}">
             <label for="rua">Rua:</label>
             <input type="text" id="rua" name="rua" required>
             <label for="numero">Número:</label>
@@ -36,7 +38,7 @@
             <input type="text" id="estado" name="estado" required>
             <label for="cep">CEP:</label>
             <input type="text" id="cep" name="cep" required>
-            <label for="pais">Pais:</label>
+            <label for="pais">País:</label>
             <input type="text" id="pais" name="pais" required>
             <button type="submit">Salvar Endereço</button>
         </form>

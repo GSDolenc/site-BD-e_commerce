@@ -174,7 +174,7 @@ def finalizar_compra():
 
     carrinho_items = db.ListaCarrinho(session['id_usuario'])
     if carrinho_items:
-        # Criar o pedido com os nomes corretos dos parâmetros
+        # Criar o pedido
         pedido = Pedido(
             data_pedido=datetime.now(),
             id_usuario=session['id_usuario'],
@@ -184,6 +184,10 @@ def finalizar_compra():
         # Inserir o pedido e obter o ID
         pedido_id = db.inserirPedido(pedido)
 
+        # Inserir itens do pedido
+        db.inserirItensPedido(pedido_id, carrinho_items)  # Certifique-se de passar os parâmetros corretos
+
+        # Atualizar estoque
         for item in carrinho_items:
             id_produto = item['IDProduto']
             quantidade = item['Quantidade']
@@ -199,12 +203,15 @@ def finalizar_compra():
 
         db.limparCarrinho(session['id_usuario'])
 
+        # Redireciona para a página de pagamento
         return redirect(url_for('pagina_pagamento', pedido_id=pedido_id))
 
     return redirect(url_for('index'))
 
 
-@app.route('/pagina_pagamento/<int:pedido_id>')
+
+
+@app.route('/pagina_pagamento/<int:pedido_id>', methods=['GET', 'POST'])
 def pagina_pagamento(pedido_id):
     if 'id_usuario' not in session:
         return redirect(url_for('login_usuario'))
@@ -213,9 +220,46 @@ def pagina_pagamento(pedido_id):
     pedido = db.buscarPedidoPorId(pedido_id)
 
     if pedido:
-        return render_template('pagina_pagamento.html', pedido=pedido)
+        if request.method == 'POST':
+            # Capturar os dados do formulário de pagamento
+            tipo_pagamento = request.form.get('tipo_pagamento')
+
+            # Buscar o valor do pagamento
+            valor_pagamento = pedido.get('valor', 0)  # Usar 'valor' do pedido
+
+            # Inserir o pagamento no banco de dados
+            pagamento = {
+                'tipoPagamento': tipo_pagamento,
+                'dataPagamento': datetime.now(),
+                'status': 'Pendente',
+                'valor': valor_pagamento,
+                'Pedido_idPedido': pedido_id
+            }
+            db.inserirPagamento(pagamento)
+
+            # Redirecionar para a confirmação de pagamento
+            return redirect(url_for('confirmacao_pagamento', pedido_id=pedido_id))
+
+        return render_template('pagina_pagamento.html', pedido=pedido, valor_pagamento=pedido.get('valor', 0))
 
     return "Pedido não encontrado", 404
+
+
+@app.route('/confirmacao_pagamento/<int:pedido_id>')
+def confirmacao_pagamento(pedido_id):
+    # Instanciar o banco de dados
+    db = Database()
+
+    # Buscar o pedido
+    pedido = db.buscarPedidoPorId(pedido_id)
+
+    if not pedido:
+        return "Pedido não encontrado", 404
+
+    # Buscar os itens do pedido
+    itens_pedido = db.buscarItensPorPedido(pedido_id)
+
+    return render_template('confirmacao_pagamento.html', pedido_id=pedido_id, pedido=pedido, itens_pedido=itens_pedido)
 
 
 @app.route('/processar_pagamento', methods=['POST'])
@@ -228,15 +272,25 @@ def processar_pagamento():
         numero_cartao = request.form.get('numeroCartao')
         nome_cartao = request.form.get('nomeCartao')
         data_expiracao = request.form.get('dataExpiracao')
+        cvv = request.form.get('cvv')
+        if not verificar_cartao(numero_cartao, nome_cartao, data_expiracao, cvv):
+            return "Dados do cartão inválidos", 400
 
-    # Inserir o pagamento na base de dados
-    db.inserirPagamento(
-        tipo_pagamento=tipo_pagamento,
-        valor=valor,
-        pedido_id=pedido_id
-    )
+    elif tipo_pagamento == 'Boleto':
+        # Gerar boleto
+        boleto_url = gerar_boleto(pedido_id, valor)
+        return redirect(boleto_url)
 
-    return redirect(url_for('index'))
+    elif tipo_pagamento == 'Pix':
+        # Gerar QR Code para Pix
+        pix_url = gerar_pix(pedido_id, valor)
+        return redirect(pix_url)
+
+    # Processar pagamento
+    db = Database()
+    db.atualizarStatusPagamento(pedido_id, 'Pago')
+
+    return redirect(url_for('confirmacao_pagamento', pedido_id=pedido_id))
 
 
 # ==========================================
@@ -298,20 +352,21 @@ def cadastro_usuario():
 
 @app.route('/adicionar_endereco', methods=['POST'])
 def adicionar_endereco():
-    if 'id_usuario' not in session:
-        return redirect(url_for('login_usuario'))
-
     rua = request.form.get('rua')
     numero = request.form.get('numero')
     cidade = request.form.get('cidade')
     estado = request.form.get('estado')
     cep = request.form.get('cep')
     pais = request.form.get('pais')
+    id_usuario = session.get('id_usuario')
 
-    if rua and numero and cidade and estado and cep and pais:
-        db.inserirEndereco(rua, numero, cidade, estado, cep, pais, session['id_usuario'])
+    if id_usuario:
+        # Adicione o endereço ao banco de dados
+        db.inserirEndereco(rua, numero, cidade, estado, cep, pais, id_usuario)
+        return redirect(url_for('usuario'))  # Redireciona para a página de perfil do usuário
+    else:
+        return redirect(url_for('login_usuario'))
 
-    return redirect(url_for('usuario'))
 
 # Logout
 @app.route('/logout')

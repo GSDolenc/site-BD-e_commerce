@@ -3,13 +3,119 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pedido Confirmado</title>
+    <title>Finalizar Pagamento</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background-color: #f0f0f0;
+        }
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+        }
+        nav ul {
+            list-style: none;
+            display: flex;
+            gap: 20px;
+        }
+        nav ul li {
+            display: inline;
+        }
+        nav ul li a img {
+            width: 30px;
+        }
+        h1 {
+            color: #333;
+        }
+        form {
+            margin-top: 20px;
+        }
+        label {
+            font-weight: bold;
+        }
+        input[type="text"] {
+            display: block;
+            margin-bottom: 10px;
+            padding: 8px;
+            width: 100%;
+            max-width: 300px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #218838;
+        }
+        #info-cartao {
+            margin-top: 20px;
+        }
+    </style>
 </head>
 <body>
+    <header>
+        <div class="logo">Pagamento</div>
+        <nav>
+            <ul>
+                <li><a href="/"><img src="{{ url_for('static', filename='home.png') }}"></a></li>
+                <li><a href="/produtos"><img src="{{ url_for('static', filename='produtos.png') }}"></a></li>
+                <li><a href="/categorias"><img src="{{ url_for('static', filename='categoria.png') }}"></a></li>
+                <li><a href="/carrinho"><img src="{{ url_for('static', filename='carrinho.png') }}"></a></li>
+                <li><a href="/usuario"><img src="{{ url_for('static', filename='usuario.png') }}"></a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <h1>Escolha o Método de Pagamento</h1>
+
+    <form action="{{ url_for('pagina_pagamento', pedido_id=pedido.idPedido) }}" method="post">
+        <label>
+            <input type="radio" name="tipo_pagamento" value="PIX" required> PIX
+        </label><br>
+        <label>
+            <input type="radio" name="tipo_pagamento" value="Cartão de Crédito" required> Cartão de Crédito
+        </label><br>
+
+        <!-- Informações do cartão de crédito -->
+        <div id="info-cartao" style="display: none;">
+            <label for="numeroCartao">Número do Cartão:</label>
+            <input type="text" id="numeroCartao" name="numeroCartao" placeholder="Digite o número do cartão"><br>
+            <label for="nomeCartao">Nome no Cartão:</label>
+            <input type="text" id="nomeCartao" name="nomeCartao" placeholder="Digite o nome como no cartão"><br>
+            <label for="dataExpiracao">Data de Expiração (MM/AA):</label>
+            <input type="text" id="dataExpiracao" name="dataExpiracao" placeholder="MM/AA"><br>
+        </div>
+
+        <button type="submit">Finalizar Pagamento</button>
+    </form>
+
     <h1>Pedido Confirmado</h1>
     <p>ID do Pedido: {{ pedido.idPedido }}</p>
     <p>Data do Pedido: {{ pedido.Data_pedido }}</p>
     <p>Status do Pedido: {{ pedido.Status_pedido }}</p>
     <p>ID do Usuário: {{ pedido.IDUsuário }}</p>
+
+    <script>
+        // Mostrar ou ocultar o formulário de cartão de crédito com base na seleção do pagamento
+        document.querySelectorAll('input[name="tipo_pagamento"]').forEach(function (elem) {
+            elem.addEventListener('change', function () {
+                if (this.value === 'Cartão de Crédito') {
+                    document.getElementById('info-cartao').style.display = 'block';
+                } else {
+                    document.getElementById('info-cartao').style.display = 'none';
+                }
+            });
+        });
+    </script>
 </body>
 </html>

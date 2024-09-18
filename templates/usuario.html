@@ -7,11 +7,16 @@
 </head>
 <body>
     <header>
-        <h1>Perfil do Usuário</h1>
         <nav>
-            <a href="{{ url_for('index') }}">Início</a>
-            <a href="{{ url_for('carrinho') }}">Carrinho</a>
-            <a href="{{ url_for('logout') }}">Logout</a>
+            <div class="logo">Perfil de Usuário</div>
+            <ul>
+                <li><a href="/"><img src="{{ url_for('static', filename='home.png') }}" alt="Página Inicial"></a></li>
+                <li><a href="/produtos"><img src="{{ url_for('static', filename='produtos.png') }}" alt="Produtos"></a></li>
+                <li><a href="/categorias"><img src="{{ url_for('static', filename='categoria.png') }}" alt="Categorias"></a></li>
+                <li><a href="/carrinho"><img src="{{ url_for('static', filename='carrinho.png') }}" alt="Carrinho"></a></li>
+                <li><a href="/usuario"><img src="{{ url_for('static', filename='usuario.png') }}" alt="Usuário"></a></li>
+                <li><a href="{{ url_for('logout') }}"><img src="{{ url_for('static', filename='logout.png') }}" alt="Sair"></a></li>
+            </ul>
         </nav>
     </header>
     <main>
@@ -27,7 +32,7 @@
         {% if enderecos %}
             <ul>
                 {% for endereco in enderecos %}
-                    <li>{{ endereco.rua }}, {{ endereco.numero }}, {{ endereco.cidade }}, {{ endereco.estado }}, {{ endereco.CEP }}, {{ endereco.pais }}</li>
+                    <li>{{ endereco['rua'] }}, {{ endereco['numero'] }}, {{ endereco['cidade'] }}, {{ endereco['estado'] }}, {{ endereco['CEP'] }}, {{ endereco['pais'] }}</li>
                 {% endfor %}
             </ul>
         {% else %}

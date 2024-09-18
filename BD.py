@@ -122,7 +122,7 @@ class Database:
             cursor = self.conexao.cursor()
             sql_update = """
                 UPDATE Produto
-                SET Quantidadeemestoque = %s
+                SET QuantidadeEmEstoque = %s
                 WHERE idProduto = %s
             """
             cursor.execute(sql_update, (novo_estoque, id_produto))
@@ -201,6 +201,45 @@ class Database:
             valores = (id_produto, quantidade, id_usuario)
             cursor.execute(sql_insert, valores)
             self.conexao.commit()
+
+    def inserirPagamento(self, pagamento):
+        """Insere o pagamento no banco de dados."""
+        if self.conexao.is_connected():
+            cursor = self.conexao.cursor()
+            sql = """
+                INSERT INTO pagamento (tipoPagamento, dataPagamento, status, valor, Pedido_idPedido)
+                VALUES (%s, %s, %s, %s, %s)
+            """
+            valores = (pagamento['tipoPagamento'], pagamento['dataPagamento'], pagamento['status'], pagamento['valor'],
+                       pagamento['Pedido_idPedido'])
+            cursor.execute(sql, valores)
+            self.conexao.commit()
+            cursor.close()
+
+    def buscarPagamentoPorPedidoId(self, pedido_id):
+        """Busca pagamento por ID do pedido."""
+        if self.conexao.is_connected():
+            cursor = self.conexao.cursor(dictionary=True)
+            query = "SELECT * FROM pagamento WHERE Pedido_idPedido = %s"
+            cursor.execute(query, (pedido_id,))
+            result = cursor.fetchone()
+            cursor.close()
+            return result
+
+    def buscarItensPorPedido(self, pedido_id):
+        """Busca itens de um pedido específico."""
+        if self.conexao.is_connected():
+            cursor = self.conexao.cursor(dictionary=True)
+            query = """
+            SELECT p.Nome, ip.Quantidade, ip.Preco_unitario
+            FROM produto p
+            JOIN item_do_pedido ip ON p.idProduto = ip.idProduto
+            WHERE ip.idPedido = %s
+            """
+            cursor.execute(query, (pedido_id,))
+            result = cursor.fetchall()
+            cursor.close()
+            return result
 
     # ==========================================
     # FUNÇÕES PARA USUÁRIOS
@@ -293,6 +332,20 @@ class Database:
             return pedido
         return None
 
+    def inserirItensPedido(self, pedido_id, itens):
+        """Insere itens no pedido na tabela item_do_pedido."""
+        if self.conexao.is_connected():
+            cursor = self.conexao.cursor()
+            sql = """
+                   INSERT INTO item_do_pedido (idPedido, idProduto, Quantidade, Preco_unitario)
+                   VALUES (%s, %s, %s, %s)
+               """
+            for item in itens:
+                preco_unitario = item.get('Preco_unitario', 0)  # Usar valor padrão se a chave não existir
+                cursor.execute(sql, (pedido_id, item['IDProduto'], item['Quantidade'], preco_unitario))
+            self.conexao.commit()
+            cursor.close()
+
         # ==========================================
         # FUNÇÕES PARA ENDEREÇOS
         # ==========================================
@@ -312,9 +365,17 @@ class Database:
                 cursor.close()
         return []
 
-    def inserirEndereco(self, id_usuario, endereco):
+    def inserirEndereco(self, rua, numero, cidade, estado, cep, pais, id_usuario):
         """Insere um novo endereço no banco de dados."""
-        self.adicionarEndereco(id_usuario, endereco)
+        if self.conexao.is_connected():
+            cursor = self.conexao.cursor()
+            sql_insert = """
+                INSERT INTO endereco (rua, numero, cidade, estado, CEP, pais, Usuário_IDUsuário)
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
+            """
+            cursor.execute(sql_insert, (rua, numero, cidade, estado, cep, pais, id_usuario))
+            self.conexao.commit()
+            cursor.close()
 
     def buscarEnderecosPorUsuario(self, id_usuario):
         """Busca endereços de um usuário específico."""
