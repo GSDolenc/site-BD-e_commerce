@@ -22,6 +22,34 @@
         <p><strong>Endereço:</strong> {{ usuario['Endereco'] }}</p>
         <p><strong>Telefone:</strong> {{ usuario['Telefone'] }}</p>
         <p><strong>Administrador:</strong> {{ 'Sim' if usuario['Administrador'] else 'Não' }}</p>
+
+        <h3>Meus Endereços</h3>
+        {% if enderecos %}
+            <ul>
+                {% for endereco in enderecos %}
+                    <li>{{ endereco.rua }}, {{ endereco.numero }}, {{ endereco.cidade }}, {{ endereco.estado }}, {{ endereco.CEP }}, {{ endereco.pais }}</li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>Você ainda não adicionou nenhum endereço.</p>
+        {% endif %}
+
+        <h3>Adicionar Novo Endereço</h3>
+        <form method="POST" action="{{ url_for('adicionar_endereco') }}">
+            <label for="rua">Rua:</label>
+            <input type="text" id="rua" name="rua" required>
+            <label for="numero">Número:</label>
+            <input type="number" id="numero" name="numero" required>
+            <label for="cidade">Cidade:</label>
+            <input type="text" id="cidade" name="cidade" required>
+            <label for="estado">Estado:</label>
+            <input type="text" id="estado" name="estado" required>
+            <label for="cep">CEP:</label>
+            <input type="text" id="cep" name="cep" required>
+            <label for="pais">País:</label>
+            <input type="text" id="pais" name="pais" required>
+            <button type="submit">Adicionar Endereço</button>
+        </form>
     </main>
 </body>
 </html>

@@ -293,6 +293,98 @@ class Database:
             return pedido
         return None
 
+        # ==========================================
+        # FUNÇÕES PARA ENDEREÇOS
+        # ==========================================
+
+    def listarEnderecos(self, id_usuario):
+        """Lista todos os endereços de um usuário."""
+        if self.conexao.is_connected():
+            cursor = self.conexao.cursor(dictionary=True)
+            try:
+                sql_query = "SELECT * FROM Endereco WHERE IDUsuário = %s"
+                cursor.execute(sql_query, (id_usuario,))
+                enderecos = cursor.fetchall()
+                return enderecos
+            except Error as e:
+                print("Erro ao listar endereços:", e)
+            finally:
+                cursor.close()
+        return []
+
+    def inserirEndereco(self, id_usuario, endereco):
+        """Insere um novo endereço no banco de dados."""
+        self.adicionarEndereco(id_usuario, endereco)
+
+    def buscarEnderecosPorUsuario(self, id_usuario):
+        """Busca endereços de um usuário específico."""
+        if self.conexao.is_connected():
+            cursor = self.conexao.cursor(dictionary=True)
+            try:
+                sql_query = "SELECT * FROM Endereco WHERE IDUsuário = %s"
+                cursor.execute(sql_query, (id_usuario,))
+                enderecos = cursor.fetchall()
+                print("Endereços encontrados:", endereços)  # Depuração
+                return enderecos
+            except Error as e:
+                print("Erro ao buscar endereços:", e)
+            finally:
+                cursor.close()
+        return []
+
+    def adicionarEndereco(self, id_usuario, endereco):
+        """Adiciona um novo endereço ao banco de dados."""
+        if self.conexao.is_connected():
+            cursor = self.conexao.cursor()
+            try:
+                sql_insert = """
+                       INSERT INTO Endereco (IDUsuário, Rua, Número, Bairro, Cidade, Estado, CEP)
+                       VALUES (%s, %s, %s, %s, %s, %s, %s)
+                   """
+                cursor.execute(sql_insert, (
+                id_usuario, endereco.rua, endereco.numero, endereco.bairro, endereco.cidade, endereco.estado,
+                endereco.cep))
+                self.conexao.commit()
+            except Error as e:
+                print("Erro ao adicionar endereço:", e)
+                self.conexao.rollback()
+            finally:
+                cursor.close()
+
+    def atualizarEndereco(self, id_endereco, novo_endereco):
+        """Atualiza um endereço existente."""
+        if self.conexao.is_connected():
+            cursor = self.conexao.cursor()
+            try:
+                sql_update = """
+                       UPDATE Endereco
+                       SET Rua = %s, Número = %s, Bairro = %s, Cidade = %s, Estado = %s, CEP = %s
+                       WHERE idEndereco = %s
+                   """
+                cursor.execute(sql_update, (
+                novo_endereco.rua, novo_endereco.numero, novo_endereco.bairro, novo_endereco.cidade,
+                novo_endereco.estado, novo_endereco.cep, id_endereco))
+                self.conexao.commit()
+            except Error as e:
+                print("Erro ao atualizar endereço:", e)
+                self.conexao.rollback()
+            finally:
+                cursor.close()
+
+    def removerEndereco(self, id_endereco):
+        """Remove um endereço existente."""
+        if self.conexao.is_connected():
+            cursor = self.conexao.cursor()
+            try:
+                sql_delete = "DELETE FROM Endereco WHERE idEndereco = %s"
+                cursor.execute(sql_delete, (id_endereco,))
+                self.conexao.commit()
+            except Error as e:
+                print("Erro ao remover endereço:", e)
+                self.conexao.rollback()
+            finally:
+                cursor.close()
+
     # ==========================================
     # FECHAR CONEXÃO
     # ==========================================

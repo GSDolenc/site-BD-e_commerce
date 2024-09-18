@@ -251,7 +251,9 @@ def usuario():
         return redirect(url_for('login_usuario'))
 
     usuario = db.buscarUsuarioPorId(id_usuario)
-    return render_template('usuario.html', usuario=usuario)
+    enderecos = db.buscarEnderecosPorUsuario(session['id_usuario'])
+
+    return render_template('usuario.html', usuario=usuario, enderecos=enderecos)
 
 # Login de usuários
 @app.route('/login', methods=['GET', 'POST'])
@@ -292,6 +294,24 @@ def cadastro_usuario():
         return redirect(url_for('login_usuario'))
 
     return render_template('cadastro.html')
+
+
+@app.route('/adicionar_endereco', methods=['POST'])
+def adicionar_endereco():
+    if 'id_usuario' not in session:
+        return redirect(url_for('login_usuario'))
+
+    rua = request.form.get('rua')
+    numero = request.form.get('numero')
+    cidade = request.form.get('cidade')
+    estado = request.form.get('estado')
+    cep = request.form.get('cep')
+    pais = request.form.get('pais')
+
+    if rua and numero and cidade and estado and cep and pais:
+        db.inserirEndereco(rua, numero, cidade, estado, cep, pais, session['id_usuario'])
+
+    return redirect(url_for('usuario'))
 
 # Logout
 @app.route('/logout')
