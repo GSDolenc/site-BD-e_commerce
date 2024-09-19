@@ -32,7 +32,7 @@
         {% if enderecos %}
             <ul>
                 {% for endereco in enderecos %}
-                    <li>{{ endereco['rua'] }}, {{ endereco['numero'] }}, {{ endereco['cidade'] }}, {{ endereco['estado'] }}, {{ endereco['CEP'] }}, {{ endereco['pais'] }}</li>
+                    <li> Rua:{{ endereco['rua'] }} Numero: {{ endereco['numero'] }} Cidade: {{ endereco['cidade'] }} Estado: {{ endereco['estado'] }} CEP {{ endereco['CEP'] }} Pais: {{ endereco['pais'] }}</li>
                 {% endfor %}
             </ul>
         {% else %}

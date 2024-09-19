@@ -382,10 +382,10 @@ class Database:
         if self.conexao.is_connected():
             cursor = self.conexao.cursor(dictionary=True)
             try:
-                sql_query = "SELECT * FROM Endereco WHERE IDUsuário = %s"
+                sql_query = "SELECT * FROM Endereco WHERE Usuário_IDUsuário = %s"
                 cursor.execute(sql_query, (id_usuario,))
                 enderecos = cursor.fetchall()
-                print("Endereços encontrados:", endereços)  # Depuração
+                print("Endereços encontrados:", enderecos)  # Depuração
                 return enderecos
             except Error as e:
                 print("Erro ao buscar endereços:", e)
